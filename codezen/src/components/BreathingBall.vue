@@ -1,105 +1,233 @@
 <template>
-    <div class="game-container">
-      <div class="line"></div>
-      <div class="ball" :style="{ bottom: ballPosition + '%', transition: transitionDuration }"></div>
+  <div v-if="!exerciseStarted" class="start-container">
+    <v-btn class="start-button" @click="startExercise">Empezar ejercicio</v-btn>
+  </div>
+  <div v-else class="exercise-container fullscreen-exercise" ref="exerciseContainer">
+    <div
+      class="breathing-sphere"
+      :style="{
+        width: sphereSize + 'px',
+        height: sphereSize + 'px',
+        transition: 'width ' + transitionDuration + 's, height ' + transitionDuration + 's',
+      }"
+    ></div>
+    <div class="bottom-info">
+      <p class="breathing-text">{{ breathingInstruction }}</p>
+      <p class="timer">Tiempo restante: {{ formattedTime }}</p>
     </div>
-    <p class="countdown">{{ countdown }}</p> <!-- Temporizador visible en pantalla -->
-  </template>
-  
-  <script>
-  export default {
-    data() {
-      return {
-        ballPosition: 0, // Posición inicial de la bola (abajo)
-        transitionDuration: '0s', // Duración de la transición de la bola, controlada dinámicamente
-        phase: 0, // 0: Inhalar, 1: Retener, 2: Exhalar, 3: Esperar
-        countdown: 3, // Cuenta regresiva visible en pantalla
-        phaseDurations: [3000, 4000, 6000, 2000], // Duraciones de cada fase en milisegundos
-        currentCountdown: null, // Intervalo para manejar la cuenta regresiva
-      };
+  </div>
+  <div v-if="exerciseCompleted" class="reflection-container">
+    <h2>Reflexiones del día</h2>
+    <textarea placeholder="Escribe tus reflexiones aquí..."></textarea>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      exerciseStarted: false,
+      exerciseCompleted: false,
+      sphereSize: 100, // Tamaño inicial de la esfera (pequeña)
+      phase: -1,
+      phaseDurations: [3, 4, 6, 2], // Duraciones de cada fase en segundos
+      exerciseDuration: 300, // Duración total del ejercicio en segundos (5 minutos)
+      secondsLeft: 300,
+      intervalId: null,
+      transitionDuration: 0, // Duración de la transición en segundos
+      breathingInstruction: '',
+    };
+  },
+  computed: {
+    formattedTime() {
+      const minutes = Math.floor(this.secondsLeft / 60).toString().padStart(2, '0');
+      const seconds = (this.secondsLeft % 60).toString().padStart(2, '0');
+      return `${minutes}:${seconds}`;
     },
-    mounted() {
-      this.startGame(); // Comienza el ejercicio al montar el componente
-    },
-    methods: {
-      startGame() {
-        this.moveBall(); // Inicia el movimiento de la bola
-      },
-      moveBall() {
-        // Configura la transición de la bola para la duración de la fase actual
-        this.transitionDuration = `${this.phaseDurations[this.phase] / 1000}s`;
-  
-        switch (this.phase) {
-          case 0: // Inhalar
-            this.ballPosition = 100; // La bola sube
-            this.startCountdown(3);
-            break;
-          case 1: // Retener
-            this.startCountdown(4);
-            break;
-          case 2: // Exhalar
-            this.ballPosition = 0; // La bola baja lentamente
-            this.startCountdown(6);
-            break;
-          case 3: // Esperar
-            this.startCountdown(2);
-            break;
+  },
+  methods: {
+    startExercise() {
+      this.exerciseStarted = true;
+      this.$nextTick(() => {
+        const exerciseElement = this.$refs.exerciseContainer;
+        if (exerciseElement && exerciseElement.requestFullscreen) {
+          exerciseElement.requestFullscreen().catch((err) => {
+            console.error("Error al intentar entrar en modo pantalla completa:", err);
+          });
+        } else {
+          console.error("requestFullscreen no está disponible en el elemento.");
         }
-  
-        // Cambia a la siguiente fase después de la duración correspondiente
-        setTimeout(() => {
-          this.phase = (this.phase + 1) % 4; // Cambia a la siguiente fase
-          this.moveBall(); // Mueve la bola de acuerdo a la nueva fase
-        }, this.phaseDurations[this.phase]);
-      },
-      startCountdown(seconds) {
-        clearInterval(this.currentCountdown); // Limpia cualquier intervalo anterior
-        this.countdown = seconds;
-        this.currentCountdown = setInterval(() => {
-          this.countdown--;
-          if (this.countdown === 0) {
-            clearInterval(this.currentCountdown); // Detén la cuenta regresiva cuando llegue a 0
-          }
-        }, 1000);
-      }
+      });
+
+      this.phase = 0;
+      this.startExerciseTimer();
+      this.startPhase();
     },
-    beforeUnmount() {
-      clearInterval(this.currentCountdown); // Limpia cualquier intervalo cuando el componente se desmonte
+    startExerciseTimer() {
+      this.intervalId = setInterval(() => {
+        this.secondsLeft--;
+        if (this.secondsLeft <= 0) {
+          this.endExercise();
+        }
+      }, 1000);
+    },
+    startPhase() {
+      switch (this.phase) {
+        case 0: // Inhalar
+          this.sphereSize = 300; // La esfera crece
+          this.transitionDuration = this.phaseDurations[this.phase];
+          this.breathingInstruction = 'Inhala';
+          break;
+        case 1: // Retener
+          this.sphereSize = 300; // La esfera se mantiene inflada
+          this.transitionDuration = 0; // Sin transición
+          this.breathingInstruction = 'Aguanta el aire';
+          break;
+        case 2: // Exhalar
+          this.sphereSize = 100; // La esfera se desinfla
+          this.transitionDuration = this.phaseDurations[this.phase];
+          this.breathingInstruction = 'Exhala';
+          break;
+        case 3: // Esperar
+          this.sphereSize = 100; // La esfera se mantiene desinflada
+          this.transitionDuration = 0; // Sin transición
+          this.breathingInstruction = 'Aguanta sin aire';
+          break;
+      }
+
+      setTimeout(() => {
+        this.phase = (this.phase + 1) % 4;
+        this.startPhase();
+      }, this.phaseDurations[this.phase] * 1000);
+    },
+    endExercise() {
+      clearInterval(this.intervalId);
+      this.exitFullScreen();
+      this.exerciseCompleted = true;
+      this.exerciseStarted = false;
+    },
+    exitFullScreen() {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch((err) => {
+          console.error("Error al salir de la pantalla completa:", err);
+        });
+      }
     }
-  };
-  </script>
-  
-  <style scoped>
-  .game-container {
-    position: relative;
-    height: 300px;
-    width: 100px;
-    margin: 20px auto;
+  },
+  beforeUnmount() {
+    clearInterval(this.intervalId);
+    this.exitFullScreen(); // Asegurarse de salir de pantalla completa si se desmonta el componente
   }
-  
-  .line {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 5px;
-    height: 100%;
-    background-color: #42b983;
+};
+</script>
+
+<style scoped>
+.start-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #2c003e; /* Color de fondo oscuro para un efecto inmersivo */
+}
+
+.start-button {
+  background-color: #6a00ff; /* Botón púrpura brillante */
+  color: white;
+  font-size: 24px;
+  padding: 15px 30px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+  transition: background-color 0.3s ease;
+}
+
+.start-button:hover {
+  background-color: #4b0082; /* Cambia a un púrpura más oscuro al pasar el ratón */
+}
+
+.exercise-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #2c003e; /* Color de fondo oscuro */
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+.fullscreen-exercise {
+  /* Ocupa la pantalla completa con la esfera */
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+}
+
+.breathing-sphere {
+  background-color: #ffd700; /* Color de la bola: amarillo brillante como el sol */
+  border-radius: 50%;
+  box-shadow: 0px 10px 30px rgba(255, 215, 0, 0.8);
+}
+
+.bottom-info {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  text-align: left;
+  color: white;
+}
+
+.breathing-text {
+  font-size: 32px;
+  font-weight: bold;
+  color: #ffd700; /* Texto en amarillo para resaltar */
+  animation: pulse 2s infinite;
+}
+
+.timer {
+  margin-top: 10px;
+  font-size: 24px;
+  color: #bbbbbb;
+}
+
+.reflection-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #2c003e;
+  color: white;
+}
+
+textarea {
+  width: 80%;
+  height: 200px;
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 10px;
+  border: none;
+  background-color: #fff;
+  color: #000;
+  font-size: 18px;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Efecto de latido para el texto */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
   }
-  
-  .ball {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 30px;
-    height: 30px;
-    background-color: #ffdd57;
-    border-radius: 50%;
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
   }
-  
-  .countdown {
-    font-size: 24px;
-    font-weight: bold;
-    margin-top: 10px;
+  100% {
+    transform: scale(1);
+    opacity: 1;
   }
-  </style>
-  
+}
+</style>

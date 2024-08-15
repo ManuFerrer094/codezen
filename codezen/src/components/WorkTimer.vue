@@ -37,9 +37,9 @@ export default {
     return {
       currentTab: 0,
       isRunning: false,
-      secondsLeft: this.workDuration,
+      secondsLeft: this.workDuration * 60, // Cambiado a segundos
       interval: null,
-      isManualSwitch: false
+      notificationSent: false // Para controlar cuándo enviar notificaciones
     };
   },
   computed: {
@@ -52,7 +52,8 @@ export default {
   watch: {
     currentTab(newVal) {
       this.pauseTimer();
-      this.secondsLeft = newVal === 0 ? this.workDuration : this.breakDuration;
+      this.secondsLeft = newVal === 0 ? this.workDuration * 60 : this.breakDuration * 60;
+      this.notificationSent = false; // Restablece el estado de la notificación al cambiar de fase
     }
   },
   mounted() {
@@ -60,25 +61,31 @@ export default {
   },
   methods: {
     startTimer() {
-      this.isRunning = true;
-      this.interval = setInterval(() => {
-        if (this.secondsLeft === 0) {
-          if (this.currentTab === 0) {
-            this.switchMode();
+      if (!this.isRunning) {
+        this.isRunning = true;
+        this.interval = setInterval(() => {
+          if (this.secondsLeft === 0) {
+            if (this.currentTab === 0) {
+              this.switchMode();
+            } else {
+              this.completeBlock();
+            }
           } else {
-            this.completeBlock();
+            this.secondsLeft--;
           }
-        } else {
-          this.secondsLeft--;
-        }
-      }, 1000);
+        }, 1000);
 
-      this.showNotification(
-        this.currentTab === 0 ? '¡Hora de trabajar!' : '¡Es hora de descansar!',
-        this.currentTab === 0
-          ? 'Mantén el enfoque y sigue adelante.'
-          : 'Tómate un respiro y relájate.'
-      );
+        // Enviar notificación solo al inicio de la fase de trabajo o descanso
+        if (!this.notificationSent && this.isRunning) {
+          this.showNotification(
+            this.currentTab === 0 ? '¡Hora de trabajar!' : '¡Es hora de descansar!',
+            this.currentTab === 0
+              ? 'Mantén el enfoque y sigue adelante.'
+              : 'Tómate un respiro y relájate.'
+          );
+          this.notificationSent = true; // Marca que la notificación ya se envió
+        }
+      }
     },
     pauseTimer() {
       this.isRunning = false;
@@ -94,20 +101,21 @@ export default {
     },
     switchMode() {
       this.currentTab = this.currentTab === 0 ? 1 : 0;
-      this.secondsLeft = this.currentTab === 0 ? this.workDuration : this.breakDuration;
+      this.secondsLeft = this.currentTab === 0 ? this.workDuration * 60 : this.breakDuration * 60;
+      this.notificationSent = false; // Restablece el estado de la notificación para la nueva fase
       this.startTimer();
     },
     manualSwitchMode() {
       this.pauseTimer();
-      this.secondsLeft = this.currentTab === 0 ? this.workDuration : this.breakDuration;
+      this.secondsLeft = this.currentTab === 0 ? this.workDuration * 60 : this.breakDuration * 60;
+      this.notificationSent = false; // Restablece el estado de la notificación al cambiar de fase manualmente
     },
     completeBlock() {
       clearInterval(this.interval);
       this.$emit('blockComplete');
 
       if (this.isLastBlock) {
-        // Redirigir al juego de la bolita
-        this.$router.push('/end-of-day');
+        this.showNotification('¡Jornada finalizada!', 'Puedes realizar el ejercicio de cierre.');
       } else {
         this.showNotification('¡Bloque completado!', 'Buen trabajo, pasa al siguiente bloque.');
       }
@@ -126,10 +134,10 @@ export default {
       }
     },
     showNotification(title, body) {
-      if (Notification.permission === 'granted') {
+      if (Notification.permission === 'granted' && this.isRunning) {
         new Notification(title, { body });
       } else {
-        console.log('Notificaciones no permitidas. Permiso actual: ' + Notification.permission);
+        console.log('Notificaciones no permitidas o temporizador en pausa.');
       }
     }
   },

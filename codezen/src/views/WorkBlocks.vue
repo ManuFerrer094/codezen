@@ -1,6 +1,6 @@
 <template>
   <v-container class="work-blocks" fluid>
-    <div v-if="workBlocks.length">
+    <div v-if="!allBlocksCompleted">
       <h2>Bloques de Trabajo Generados</h2>
       <div v-for="(block, index) in workBlocks" :key="index">
         <v-card
@@ -14,9 +14,10 @@
           <v-card-text>
             <WorkTimer
               v-if="activeBlockIndex === index"
-              :workDuration="50"
-              :breakDuration="10"
+              :workDuration="5"
+              :breakDuration="5"
               @blockComplete="completeBlock(index)"
+              :isLastBlock="index === workBlocks.length - 1"
             />
             <p v-if="block.completed">Bloque completado</p>
           </v-card-text>
@@ -33,7 +34,8 @@
       </div>
     </div>
     <div v-else>
-      <p>No se generaron bloques de trabajo. Verifica la configuración.</p>
+      <h3>Todos los bloques han sido completados</h3>
+      <v-btn @click="goToEndOfDay" color="primary">Ir al Ejercicio de Cierre</v-btn> <!-- Botón para redirigir -->
     </div>
   </v-container>
 </template>
@@ -48,8 +50,13 @@ export default {
   data() {
     return {
       workBlocks: [],
-      activeBlockIndex: 0
+      activeBlockIndex: 0 // Controla el bloque que está en curso
     };
+  },
+  computed: {
+    allBlocksCompleted() {
+      return this.workBlocks.every(block => block.completed);
+    }
   },
   mounted() {
     const userData = JSON.parse(localStorage.getItem('userData'));
@@ -73,14 +80,29 @@ export default {
       });
 
       this.workBlocks = workBlocks;
+      this.showNotification("¡Empieza el primer bloque de trabajo!", "Recuerda mantener tu enfoque.");
     }
   },
   methods: {
     completeBlock(index) {
       this.workBlocks[index].completed = true;
 
+      // Notificar sobre el bloque completado y siguiente bloque
+      this.showNotification(`Bloque ${index + 1} completado`, "Tómate un descanso antes del siguiente bloque.");
+
+      // Pasar al siguiente bloque si existe
       if (index + 1 < this.workBlocks.length) {
         this.activeBlockIndex = index + 1;
+      }
+    },
+    goToEndOfDay() {
+      this.$router.push('/end-of-day'); // Redirige a la página del ejercicio de cierre cuando el usuario haga clic en el botón
+    },
+    showNotification(title, body) {
+      if (Notification.permission === 'granted') {
+        new Notification(title, { body });
+      } else {
+        Notification.requestPermission();
       }
     }
   }

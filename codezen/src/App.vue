@@ -5,6 +5,7 @@
       <v-spacer></v-spacer>
       <v-btn text to="/">Inicio</v-btn>
       <v-btn text to="/my-reflections">Mis Reflexiones</v-btn>
+      <v-btn text to="/end-of-day">Final</v-btn>
     </v-app-bar>
     <v-main>
       <router-view />
