@@ -57,6 +57,7 @@ export default {
       notificationVisible: false,
       notificationTitle: '',
       notificationMessage: '',
+      totalHoursWorked: 0, // Nuevo: Para almacenar el total de horas trabajadas
       nextAction: null // Acción a ejecutar después de aceptar la notificación
     };
   },
@@ -100,6 +101,7 @@ export default {
   },
   methods: {
     handleWorkComplete() {
+      this.totalHoursWorked += 1; // Incrementa las horas trabajadas
       this.showNotification(
         "¡Es hora de descansar!",
         "Relájate antes de empezar el siguiente bloque.",
@@ -122,6 +124,8 @@ export default {
       this.workBlocks[index].completed = true;
     },
     goToEndOfDay() {
+      // Almacenar las horas trabajadas en el localStorage
+      localStorage.setItem('totalHoursWorked', this.totalHoursWorked);
       this.$router.push('/end-of-day');
     },
     showNotification(title, message, action = null) {

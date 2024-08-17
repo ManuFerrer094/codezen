@@ -1,169 +1,335 @@
 <template>
-  <v-container class="my-reflections" fluid>
-    <v-card class="pa-4 reflections-card">
-      <v-card-title class="text-h5 reflections-title">Mis Reflexiones</v-card-title>
-      <v-divider></v-divider>
+  <div class="container my-reflections">
+    <div class="card reflections-card">
+      <div class="card-header reflections-title">Mis Reflexiones</div>
+      <div class="card-body">
+        <!-- Filtros -->
+        <div class="row filter-row mb-4">
+          <div class="col-md-4">
+            <select v-model="filters.sentiment" class="form-select">
+              <option value="">Filtrar por Ánimo</option>
+              <option v-for="option in sentimentOptions" :key="option" :value="option">{{ option }}</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <input
+              v-model="filters.text"
+              type="text"
+              class="form-control"
+              placeholder="Buscar por Reflexión"
+            />
+          </div>
+          <div class="col-md-4">
+            <button @click="clearFilters" class="btn btn-primary">Limpiar Filtros</button>
+          </div>
+        </div>
 
-      <!-- Sección de estadísticas -->
-      <v-row class="stats-row">
-        <v-col cols="12" md="4">
-          <v-card class="stat-card">
-            <v-card-title>Total Reflexiones</v-card-title>
-            <v-card-text>{{ totalReflections }}</v-card-text>
-          </v-card>
-        </v-col>
-        <v-col cols="12" md="4">
-          <v-card class="stat-card">
-            <v-card-title>Fecha más reciente</v-card-title>
-            <v-card-text>{{ latestReflectionDate }}</v-card-text>
-          </v-card>
-        </v-col>
-        <v-col cols="12" md="4">
-          <v-card class="stat-card">
-            <v-card-title>Fecha más antigua</v-card-title>
-            <v-card-text>{{ earliestReflectionDate }}</v-card-text>
-          </v-card>
-        </v-col>
-      </v-row>
+        <!-- Botón de exportar a PDF -->
+        <button @click="exportToPDF" class="btn btn-primary mb-4">Exportar a PDF</button>
 
-      <!-- Filtros -->
-      <v-row class="filters-row">
-        <v-col cols="12" md="4">
-          <v-text-field
-            v-model="filters.text"
-            label="Buscar por texto"
-            outlined
-            clearable
-          ></v-text-field>
-        </v-col>
-        <v-col cols="12" md="4">
-          <v-menu
-            v-model="dateMenu"
-            :close-on-content-click="false"
-            transition="scale-transition"
-            offset-y
-            max-width="290px"
-            min-width="290px"
-          >
-            <template #activator="{ on, attrs }">
-              <v-text-field
-                v-model="filters.date"
-                label="Buscar por fecha"
-                readonly
-                v-bind="attrs"
-                v-on="on"
-                outlined
-                clearable
-              ></v-text-field>
-            </template>
-            <v-date-picker v-model="filters.date" @input="dateMenu = false"></v-date-picker>
-          </v-menu>
-        </v-col>
-      </v-row>
+        <!-- Tabla de reflexiones con encabezados estáticos y opciones de ordenamiento -->
+        <div class="table-responsive">
+          <table class="table reflections-table">
+            <thead>
+              <tr>
+                <th @click="sortTable('date')">
+                  Fecha
+                  <span class="sort-icon" v-if="sortColumn === 'date'">
+                    <svg
+                      v-if="sortOrder === 'asc'"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="feather feather-arrow-up"
+                    >
+                      <line x1="12" y1="19" x2="12" y2="5"></line>
+                      <polyline points="5 12 12 5 19 12"></polyline>
+                    </svg>
+                    <svg
+                      v-else
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="feather feather-arrow-down"
+                    >
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <polyline points="19 12 12 19 5 12"></polyline>
+                    </svg>
+                  </span>
+                </th>
+                <th @click="sortTable('text')">
+                  Reflexión
+                  <span class="sort-icon" v-if="sortColumn === 'text'">
+                    <svg
+                      v-if="sortOrder === 'asc'"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="feather feather-arrow-up"
+                    >
+                      <line x1="12" y1="19" x2="12" y2="5"></line>
+                      <polyline points="5 12 12 5 19 12"></polyline>
+                    </svg>
+                    <svg
+                      v-else
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="feather feather-arrow-down"
+                    >
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <polyline points="19 12 12 19 5 12"></polyline>
+                    </svg>
+                  </span>
+                </th>
+                <th @click="sortTable('sentiment')">
+                  Ánimo
+                  <span class="sort-icon" v-if="sortColumn === 'sentiment'">
+                    <svg
+                      v-if="sortOrder === 'asc'"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="feather feather-arrow-up"
+                    >
+                      <line x1="12" y1="19" x2="12" y2="5"></line>
+                      <polyline points="5 12 12 5 19 12"></polyline>
+                    </svg>
+                    <svg
+                      v-else
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="feather feather-arrow-down"
+                    >
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <polyline points="19 12 12 19 5 12"></polyline>
+                    </svg>
+                  </span>
+                </th>
+                <th @click="sortTable('hoursWorked')">
+                  Horas Trabajadas
+                  <span class="sort-icon" v-if="sortColumn === 'hoursWorked'">
+                    <svg
+                      v-if="sortOrder === 'asc'"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="feather feather-arrow-up"
+                    >
+                      <line x1="12" y1="19" x2="12" y2="5"></line>
+                      <polyline points="5 12 12 5 19 12"></polyline>
+                    </svg>
+                    <svg
+                      v-else
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="feather feather-arrow-down"
+                    >
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <polyline points="19 12 12 19 5 12"></polyline>
+                    </svg>
+                  </span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(reflection, index) in paginatedReflections"
+                :key="index"
+                class="reflection-row"
+              >
+                <td>{{ reflection.date }}</td>
+                <td>{{ reflection.text }}</td>
+                <td>{{ reflection.sentiment }}</td>
+                <td>{{ reflection.hoursWorked }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-      <!-- Botón de exportar a PDF -->
-      <v-btn color="primary" class="mb-4" @click="exportToPDF">Exportar a PDF</v-btn>
-
-      <!-- Tabla de reflexiones -->
-      <v-card-text>
-        <v-data-table
-          :headers="headers"
-          :items="filteredReflections"
-          class="elevation-1 reflections-table"
-          item-value="text"
-          item-key="date"
-        ></v-data-table>
-      </v-card-text>
-    </v-card>
-  </v-container>
+        <!-- Paginación -->
+        <nav aria-label="Page navigation example" class="mt-4">
+          <ul class="pagination justify-content-center">
+            <li class="page-item" :class="{ disabled: currentPage === 1 }">
+              <button class="page-link" @click="changePage(currentPage - 1)">
+                Anterior
+              </button>
+            </li>
+            <li
+              class="page-item"
+              :class="{ active: page === currentPage }"
+              v-for="page in totalPages"
+              :key="page"
+            >
+              <button class="page-link" @click="changePage(page)">{{ page }}</button>
+            </li>
+            <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+              <button class="page-link" @click="changePage(currentPage + 1)">
+                Siguiente
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
 </template>
 
-<script>
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
 
-export default {
-  data() {
-    return {
-      headers: [
-        { text: 'Fecha', value: 'date' },
-        { text: 'Reflexión', value: 'text' }
-      ],
-      reflections: [],
-      filters: {
-        text: '',
-        date: ''
-      },
-      dateMenu: false,
-    };
-  },
-  computed: {
-    totalReflections() {
-      return this.reflections.length;
-    },
-    latestReflectionDate() {
-      return this.reflections.length > 0
-        ? this.reflections[0].date
-        : 'N/A';
-    },
-    earliestReflectionDate() {
-      return this.reflections.length > 0
-        ? this.reflections[this.reflections.length - 1].date
-        : 'N/A';
-    },
-    filteredReflections() {
-      let filtered = this.reflections;
+const reflections = ref([])
+const sentimentOptions = ref(['Happy', 'Neutral', 'Sad'])
+const filters = ref({
+  sentiment: '',
+  text: ''
+})
+const sortColumn = ref('')
+const sortOrder = ref('asc')
+const currentPage = ref(1)
+const itemsPerPage = ref(10)
 
-      if (this.filters.text) {
-        filtered = filtered.filter(reflection =>
-          reflection.text.toLowerCase().includes(this.filters.text.toLowerCase())
-        );
+const filteredReflections = computed(() => {
+  let filtered = reflections.value.filter(reflection => {
+    const matchesSentiment = filters.value.sentiment
+      ? reflection.sentiment === filters.value.sentiment
+      : true
+    const matchesText = reflection.text
+      .toLowerCase()
+      .includes(filters.value.text.toLowerCase())
+    return matchesSentiment && matchesText
+  })
+
+  if (sortColumn.value) {
+    filtered = filtered.sort((a, b) => {
+      const aValue = a[sortColumn.value]
+      const bValue = b[sortColumn.value]
+
+      if (sortOrder.value === 'asc') {
+        return aValue > bValue ? 1 : -1
+      } else {
+        return aValue < bValue ? 1 : -1
       }
-
-      if (this.filters.date) {
-        filtered = filtered.filter(reflection =>
-          reflection.date.startsWith(this.filters.date)
-        );
-      }
-
-      return filtered;
-    }
-  },
-  mounted() {
-    this.loadReflections();
-  },
-  methods: {
-    loadReflections() {
-      this.reflections = JSON.parse(localStorage.getItem('reflections')) || [];
-      this.reflections.sort((a, b) => new Date(b.date) - new Date(a.date));
-    },
-    exportToPDF() {
-      const doc = new jsPDF();
-      doc.text('Mis Reflexiones', 20, 20);
-
-      // Generar la tabla con reflexiones
-      doc.autoTable({
-        head: [['Fecha', 'Reflexión']],
-        body: this.filteredReflections.map(reflection => [reflection.date, reflection.text]),
-      });
-
-      doc.save('mis-reflexiones.pdf');
-    }
+    })
   }
-};
+
+  return filtered
+})
+
+const paginatedReflections = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  return filteredReflections.value.slice(start, end)
+})
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredReflections.value.length / itemsPerPage.value)
+})
+
+const changePage = (page) => {
+  if (page > 0 && page <= totalPages.value) {
+    currentPage.value = page
+  }
+}
+
+const loadReflections = () => {
+  reflections.value = JSON.parse(localStorage.getItem('reflections')) || []
+}
+
+const exportToPDF = () => {
+  const doc = new jsPDF()
+  doc.text('Mis Reflexiones', 20, 20)
+  doc.autoTable({
+    head: [['Fecha', 'Reflexión', 'Ánimo', 'Horas Trabajadas']],
+    body: reflections.value.map(reflection => [
+      reflection.date,
+      reflection.text,
+      reflection.sentiment,
+      reflection.hoursWorked,
+    ]),
+  })
+  doc.save('mis-reflexiones.pdf')
+}
+
+const clearFilters = () => {
+  filters.value.sentiment = ''
+  filters.value.text = ''
+}
+
+const sortTable = column => {
+  if (sortColumn.value === column) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortColumn.value = column
+    sortOrder.value = 'asc'
+  }
+}
+
+onMounted(() => {
+  loadReflections()
+})
 </script>
 
 <style scoped>
 .my-reflections {
   margin-top: 40px;
-  background: linear-gradient(135deg, #6a00ff, #ff89e9);
   padding: 20px;
-  border-radius: 15px;
 }
 
 .reflections-card {
   background-color: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
   box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
   border-radius: 20px;
   padding: 20px;
@@ -176,34 +342,55 @@ export default {
   margin-bottom: 20px;
 }
 
-.stats-row {
+.filter-row {
   margin-bottom: 20px;
-}
-
-.stat-card {
-  text-align: center;
-  background-color: #f3f3f3;
-  border-radius: 15px;
-  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.filters-row {
-  margin-bottom: 20px;
+  justify-content: center;
 }
 
 .reflections-table {
-  background-color: white;
-  border-radius: 15px;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
 }
 
-.v-btn {
-  font-size: 18px;
-  font-weight: bold;
+.reflections-table th,
+.reflections-table td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: left;
+}
+
+.reflections-table th {
   background-color: #6a00ff;
   color: white;
+  cursor: pointer;
+  position: relative;
 }
 
-.v-btn:hover {
+.sort-icon {
+  margin-left: 5px;
+}
+
+.reflections-table tr:nth-child(even) {
+  background-color: #f3f3f3;
+}
+
+.reflections-table tr:hover {
+  background-color: rgba(106, 0, 255, 0.2);
+}
+
+.btn-primary {
+  background-color: #6a00ff;
+  border-color: #6a00ff;
+}
+
+.btn-primary:hover {
   background-color: #4b0082;
+  border-color: #4b0082;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #6a00ff;
+  border-color: #6a00ff;
 }
 </style>

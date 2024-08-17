@@ -17,21 +17,24 @@
       <p class="timer">Tiempo restante: {{ formattedTime }}</p>
     </div>
 
+    <!-- Reflexión y Sentimiento -->
     <div v-if="exerciseCompleted" class="reflection-container">
-      <h2>Reflexiones del día</h2>
-      <textarea v-model="reflection" class="reflection-textarea" placeholder="Escribe tus reflexiones aquí..."></textarea>
-      <v-btn color="primary" @click="endDay" class="mt-4">Finalizar Día</v-btn>
+      <ReflectionForm @reflectionSaved="endDay" />
     </div>
   </div>
 </template>
 
 <script>
+import ReflectionForm from '@/components/ReflectionForm.vue';
+
 export default {
+  components: {
+    ReflectionForm
+  },
   data() {
     return {
       exerciseStarted: false,
       exerciseCompleted: false,
-      reflection: '',
       sphereSize: 100, // Tamaño inicial de la esfera (pequeña)
       phase: -1,
       phaseDurations: [3, 4, 6, 2], // Duraciones de cada fase en segundos
@@ -117,14 +120,9 @@ export default {
       }
     },
     endDay() {
-      // Guardar la reflexión en localStorage o en el store
-      const reflections = JSON.parse(localStorage.getItem('reflections')) || [];
-      reflections.push({ date: new Date().toLocaleString(), text: this.reflection });
-      localStorage.setItem('reflections', JSON.stringify(reflections));
-
       // Salir de pantalla completa y redirigir a la página principal
       this.exitFullScreen();
-      this.$router.push({ name: 'Home' });
+      this.$router.push({ name: 'Home' }); // Redirigir a la página de inicio
     }
   },
   beforeUnmount() {
@@ -248,5 +246,4 @@ export default {
     opacity: 1;
   }
 }
-
 </style>
