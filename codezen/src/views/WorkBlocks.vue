@@ -14,44 +14,50 @@
           <v-card-text>
             <WorkTimer
               v-if="activeBlockIndex === index"
-              :workDuration="5"
-              :breakDuration="5"
-              @blockComplete="completeBlock(index)"
+              ref="workTimer"
+              :workDuration="block.workDuration"
+              :breakDuration="block.breakDuration"
+              @workComplete="handleWorkComplete"
+              @breakComplete="handleBreakComplete"
               :isLastBlock="index === workBlocks.length - 1"
             />
             <p v-if="block.completed">Bloque completado</p>
           </v-card-text>
-          <v-card-actions>
-            <v-btn
-              v-if="!block.completed && activeBlockIndex === index"
-              @click="completeBlock(index)"
-              color="success"
-            >
-              Completar Bloque
-            </v-btn>
-          </v-card-actions>
         </v-card>
       </div>
     </div>
     <div v-else>
       <h3>Todos los bloques han sido completados</h3>
-      <v-btn @click="goToEndOfDay" color="primary">Ir al Ejercicio de Cierre</v-btn> <!-- Botón para redirigir -->
+      <v-btn @click="goToEndOfDay" color="primary">Ir al Ejercicio de Cierre</v-btn>
     </div>
+
+    <!-- Modal para notificaciones -->
+    <NotificationModal 
+      v-if="notificationVisible" 
+      :title="notificationTitle" 
+      :message="notificationMessage" 
+      @accept="handleNotificationAccept"
+    />
   </v-container>
 </template>
 
 <script>
 import WorkTimer from '@/components/WorkTimer.vue';
-import { enviarNotificacion } from '@/utils/notifications.js'; // Importa la función
+import NotificationModal from '@/components/NotificationModal.vue';
 
 export default {
   components: {
-    WorkTimer
+    WorkTimer,
+    NotificationModal
   },
   data() {
     return {
       workBlocks: [],
-      activeBlockIndex: 0
+      activeBlockIndex: 0,
+      notificationVisible: false,
+      notificationTitle: '',
+      notificationMessage: '',
+      nextAction: null // Acción a ejecutar después de aceptar la notificación
     };
   },
   computed: {
@@ -63,6 +69,8 @@ export default {
     const userData = JSON.parse(localStorage.getItem('userData'));
     if (userData && userData.workLapses) {
       const workLapses = userData.workLapses;
+      const workDuration = userData.workDuration || 1;
+      const breakDuration = userData.breakDuration || 5;
 
       const workBlocks = [];
 
@@ -74,34 +82,83 @@ export default {
           for (let hour = start; hour < end; hour++) {
             workBlocks.push({
               time: `${hour}:00 - ${hour + 1}:00`,
-              completed: false
+              completed: false,
+              workDuration,
+              breakDuration
             });
           }
         }
       });
 
       this.workBlocks = workBlocks;
-      this.showNotification("¡Empieza el primer bloque de trabajo!", "Recuerda mantener tu enfoque.");
+      this.showNotification(
+        "¡Empieza el primer bloque de trabajo!", 
+        "Recuerda mantener tu enfoque.", 
+        this.startFirstBlock // Inicia el primer bloque después de aceptar
+      );
     }
   },
   methods: {
-    completeBlock(index) {
-      this.workBlocks[index].completed = true;
-
-      // Notificar sobre el bloque completado y siguiente bloque
-      this.showNotification(`Bloque ${index + 1} completado`, "Tómate un descanso antes del siguiente bloque.");
-
-      // Pasar al siguiente bloque si existe
-      if (index + 1 < this.workBlocks.length) {
-        this.activeBlockIndex = index + 1;
+    handleWorkComplete() {
+      this.showNotification(
+        "¡Es hora de descansar!",
+        "Relájate antes de empezar el siguiente bloque.",
+        this.startBreak // Inicia el descanso después de aceptar
+      );
+    },
+    handleBreakComplete() {
+      this.completeBlock(this.activeBlockIndex); // Completa el bloque actual
+      if (this.activeBlockIndex < this.workBlocks.length - 1) {
+        this.showNotification(
+          `Bloque ${this.activeBlockIndex + 1} completado`,
+          "Prepárate para el siguiente bloque de trabajo.",
+          this.startNextBlock // Inicia el siguiente bloque después del descanso
+        );
+      } else {
+        this.showNotification("Todos los bloques completados", "¡Buen trabajo!", this.goToEndOfDay);
       }
     },
-    goToEndOfDay() {
-      this.$router.push('/end-of-day'); // Redirige a la página del ejercicio de cierre cuando el usuario haga clic en el botón
+    completeBlock(index) {
+      this.workBlocks[index].completed = true;
     },
-    showNotification(title, message) {
-      // Usa la función para enviar la notificación
-      enviarNotificacion(title, message);
+    goToEndOfDay() {
+      this.$router.push('/end-of-day');
+    },
+    showNotification(title, message, action = null) {
+      this.notificationTitle = title;
+      this.notificationMessage = message;
+      this.notificationVisible = true;
+      this.nextAction = action; // Guarda la acción que se ejecutará al aceptar
+    },
+    handleNotificationAccept() {
+      this.notificationVisible = false; // Cierra la notificación
+      if (this.nextAction) {
+        this.nextAction(); // Ejecuta la acción pendiente
+      }
+    },
+    startFirstBlock() {
+      if (this.$refs.workTimer) {
+        this.$refs.workTimer[0].startTimer(); // Asegura que se inicie el primer bloque
+      }
+    },
+    startNextBlock() {
+      if (this.activeBlockIndex < this.workBlocks.length - 1) {
+        this.activeBlockIndex++; // Pasa al siguiente bloque
+        this.$nextTick(() => {
+          if (this.$refs.workTimer && this.$refs.workTimer[0]) {
+            this.showNotification(
+              "¡Empieza el siguiente bloque de trabajo!",
+              "Mantén tu enfoque en el trabajo.",
+              () => this.$refs.workTimer[0].startTimer()
+            ); // Notificación para empezar el siguiente bloque
+          }
+        });
+      }
+    },
+    startBreak() {
+      if (this.$refs.workTimer && this.$refs.workTimer[0]) {
+        this.$refs.workTimer[0].startBreak(); // Inicia el temporizador del descanso
+      }
     }
   }
 };

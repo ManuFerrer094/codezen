@@ -13,7 +13,6 @@ export default {
   },
   methods: {
     handleExerciseCompletion() {
-      // Aquí podrías manejar cualquier acción adicional cuando se complete el ejercicio.
       console.log('Ejercicio completado');
     }
   }
@@ -27,6 +26,6 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #2c003e; /* Color de fondo oscuro */
+  background-color: #2c003e;
 }
 </style>

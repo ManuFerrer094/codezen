@@ -2,13 +2,13 @@
   <v-container class="home-page" fluid>
     <v-row justify="center">
       <v-col cols="12" md="8">
+        <v-card class="pa-4">
+          <v-card-title class="text-h5">Planifica tu Jornada</v-card-title>
           <v-divider></v-divider>
-            <div v-if="!showForm" class="start-container">
-              <v-btn color="primary" class="start-button" @click="startPlanning">Empezar Jornada</v-btn>
-            </div>
-            <div v-else>
-              <FormSetup @submit="goToWorkBlocks" />
-            </div>
+          <v-card-text>
+            <FormSetup @submit="goToWorkBlocks" />
+          </v-card-text>
+        </v-card>
       </v-col>
     </v-row>
   </v-container>
@@ -21,19 +21,11 @@ export default {
   components: {
     FormSetup
   },
-  data() {
-    return {
-      showForm: false // Estado para mostrar u ocultar el formulario
-    };
-  },
   methods: {
-    startPlanning() {
-      this.showForm = true; // Muestra el formulario al hacer clic en el botón
-    },
     goToWorkBlocks(formData) {
       console.log('Datos recibidos en HomeView:', formData);
 
-      if (formData && formData.age) {
+      if (formData && formData.profession && formData.workLapses.length > 0) {
         localStorage.setItem('userData', JSON.stringify(formData));
         this.$router.push({ name: 'WorkBlocks' });
       } else {
@@ -43,6 +35,7 @@ export default {
   }
 };
 </script>
+
 
 <style scoped>
 .start-container {

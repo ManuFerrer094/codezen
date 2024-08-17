@@ -17,14 +17,12 @@
 </template>
 
 <script>
-import { enviarNotificacion } from '@/utils/notifications.js'; // Importa la función
-
 export default {
   name: 'WorkTimer',
   props: {
     workDuration: {
       type: Number,
-      default: 5
+      default: 25
     },
     breakDuration: {
       type: Number,
@@ -37,11 +35,10 @@ export default {
   },
   data() {
     return {
-      currentTab: 0,
+      currentTab: 0, // 0: Work, 1: Break
       isRunning: false,
       secondsLeft: this.workDuration * 60,
-      interval: null,
-      notificationSent: false
+      interval: null
     };
   },
   computed: {
@@ -52,24 +49,27 @@ export default {
     }
   },
   methods: {
-    showNotification() {
-      const title = this.currentTab === 0 ? '¡Hora de trabajar!' : '¡Es hora de descansar!';
-      const message = this.currentTab === 0
-        ? 'Mantén el enfoque y sigue adelante.'
-        : 'Tómate un respiro y relájate.';
-
-      enviarNotificacion(title, message);
-    },
     startTimer() {
+      this.currentTab = 0; // Asegura que comience en la fase de trabajo
+      this.secondsLeft = this.workDuration * 60;
+      this.runTimer();
+    },
+    startBreak() {
+      this.currentTab = 1; // Cambia a la fase de descanso
+      this.secondsLeft = this.breakDuration * 60;
+      this.runTimer();
+    },
+    runTimer() {
       if (!this.isRunning) {
         this.isRunning = true;
-        this.showNotification(); // Mover aquí la llamada para que la notificación se muestre al iniciar
         this.interval = setInterval(() => {
           if (this.secondsLeft === 0) {
             if (this.currentTab === 0) {
-              this.switchMode();
+              this.pauseTimer();
+              this.$emit('workComplete');
             } else {
-              this.completeBlock();
+              this.pauseTimer();
+              this.$emit('breakComplete');
             }
           } else {
             this.secondsLeft--;
@@ -82,33 +82,18 @@ export default {
       clearInterval(this.interval);
     },
     nextStep() {
-      this.pauseTimer();
       if (this.currentTab === 0) {
-        this.switchMode();
+        // Cambiar a descanso
+        this.startBreak();
       } else {
-        this.completeBlock();
+        // Completar el bloque al finalizar el descanso
+        this.pauseTimer();
+        this.$emit('breakComplete');
       }
-    },
-    switchMode() {
-      this.currentTab = this.currentTab === 0 ? 1 : 0;
-      this.secondsLeft = this.currentTab === 0 ? this.workDuration * 60 : this.breakDuration * 60;
-      this.notificationSent = false;
-      this.showNotification();
     },
     manualSwitchMode() {
       this.pauseTimer();
       this.secondsLeft = this.currentTab === 0 ? this.workDuration * 60 : this.breakDuration * 60;
-      this.notificationSent = false;
-    },
-    completeBlock() {
-      clearInterval(this.interval);
-      this.$emit('blockComplete');
-
-      if (this.isLastBlock) {
-        this.showNotification('¡Jornada finalizada!', 'Puedes realizar el ejercicio de cierre.');
-      } else {
-        this.showNotification('¡Bloque completado!', 'Buen trabajo, pasa al siguiente bloque.');
-      }
     }
   },
   beforeUnmount() {

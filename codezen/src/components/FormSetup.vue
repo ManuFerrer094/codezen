@@ -1,10 +1,7 @@
 <template>
   <v-form @submit.prevent="submitForm">
     <v-card-title class="text-h5">Planifica tu Jornada</v-card-title>
-    <!-- Campos del formulario -->
-    <v-text-field v-model="formData.age" label="Edad" type="number" outlined required></v-text-field>
-    <v-text-field v-model="formData.weight" label="Peso" type="number" outlined required></v-text-field>
-    <v-select v-model="formData.activityLevel" :items="activityLevels" label="Nivel de Actividad" outlined required></v-select>
+    <!-- Campo de Profesión -->
     <v-select v-model="formData.profession" :items="professions" label="Profesión" outlined required></v-select>
 
     <h3>Añadir Lapsos de Tiempo</h3>
@@ -39,15 +36,11 @@ export default {
   data() {
     return {
       formData: {
-        age: null,
-        weight: null,
-        activityLevel: null,
         profession: '',
         workLapses: [
           { startTime: null, endTime: null }
         ]
       },
-      activityLevels: ['Sedentario', 'Activo', 'Muy Activo'],
       professions: [
         'Desarrollador Full Stack',
         'Desarrollador Frontend',
