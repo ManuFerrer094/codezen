@@ -289,9 +289,33 @@ const loadReflections = () => {
 }
 
 const exportToPDF = () => {
-  const doc = new jsPDF()
-  doc.text('Mis Reflexiones', 20, 20)
+  const doc = new jsPDF();
+
+  // Detalles del usuario y fecha
+  const name = 'Nombre Apellido'; // Reemplaza con el nombre y apellido del usuario
+  const currentDate = new Date();
+  const day = currentDate.getDate();
+  const month = currentDate.toLocaleString('default', { month: 'long' });
+  const year = currentDate.getFullYear();
+
+  doc.setFontSize(12);
+  doc.text(`Nombre: ${name}`, 70, 20);
+  doc.text(`Fecha: ${day} de ${month} de ${year}`, 70, 30);
+
+  // Título del documento
+  doc.setFontSize(18);
+  doc.text('Registro de Reflexiones', 20, 50);
+
+  // Definir colores personalizados para el PDF
+  const headerColor = [106, 0, 255]; // Color morado del header
+  const headerTextColor = [255, 255, 255]; // Texto blanco
+  const rowColorEven = [243, 243, 243]; // Color de fila par
+  const rowColorOdd = [255, 255, 255]; // Color de fila impar
+  const borderColor = [0, 0, 0]; // Color negro para las líneas de las celdas
+
+  // Generar la tabla con los colores definidos y bordes
   doc.autoTable({
+    startY: 60, // Inicia la tabla debajo del título
     head: [['Fecha', 'Reflexión', 'Ánimo', 'Horas Trabajadas']],
     body: reflections.value.map(reflection => [
       reflection.date,
@@ -299,9 +323,38 @@ const exportToPDF = () => {
       reflection.sentiment,
       reflection.hoursWorked,
     ]),
-  })
-  doc.save('mis-reflexiones.pdf')
-}
+    headStyles: {
+      fillColor: headerColor,
+      textColor: headerTextColor,
+      lineWidth: 0.5, // Ancho de las líneas de borde en el header
+      lineColor: borderColor,
+    },
+    alternateRowStyles: {
+      fillColor: rowColorEven,
+      lineWidth: 0.5, // Ancho de las líneas de borde en filas alternas
+      lineColor: borderColor,
+    },
+    rowStyles: {
+      fillColor: rowColorOdd,
+      lineWidth: 0.5, // Ancho de las líneas de borde en filas impares
+      lineColor: borderColor,
+    },
+    styles: {
+      lineWidth: 0.5, // Ancho de las líneas de borde general
+      lineColor: borderColor, // Color de las líneas de borde general
+    },
+  });
+
+  // Espacio para firma
+  doc.text('Firma del empleado:', 20, doc.autoTable.previous.finalY + 30);
+  doc.line(60, doc.autoTable.previous.finalY + 30, 150, doc.autoTable.previous.finalY + 30); // Línea para la firma
+
+  // Guardar el PDF
+  doc.save('registro-reflexiones.pdf');
+};
+
+
+
 
 const clearFilters = () => {
   filters.value.sentiment = ''

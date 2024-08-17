@@ -45,6 +45,18 @@
       selectSentiment(sentiment) {
         this.selectedSentiment = sentiment;
       },
+      calculateTotalHoursWorked() {
+        const lapses = JSON.parse(localStorage.getItem('workLapses')) || [];
+        let totalHours = 0;
+  
+        lapses.forEach(lapso => {
+          const startHour = parseInt(lapso.startTime.split(':')[0]);
+          const endHour = parseInt(lapso.endTime.split(':')[0]);
+          totalHours += endHour - startHour;
+        });
+  
+        return totalHours;
+      },
       saveReflection() {
         // Validación básica
         if (!this.reflection || !this.selectedSentiment) {
@@ -52,15 +64,15 @@
           return;
         }
   
-        // Cargar las horas trabajadas automáticamente desde el localStorage
-        const hoursWorked = localStorage.getItem('totalHoursWorked') || '0';
+        // Calcular las horas trabajadas basadas en los lapsos
+        const totalHoursWorked = this.calculateTotalHoursWorked();
   
         // Guardar la reflexión en el localStorage o en el store
         const reflections = JSON.parse(localStorage.getItem('reflections')) || [];
         reflections.push({
           date: new Date().toLocaleString(),
           text: this.reflection,
-          hoursWorked: hoursWorked, // Añadir las horas trabajadas automáticamente
+          hoursWorked: totalHoursWorked, // Añadir las horas trabajadas calculadas
           sentiment: this.selectedSentiment,
         });
         localStorage.setItem('reflections', JSON.stringify(reflections));

@@ -68,6 +68,13 @@ export default {
       this.formData.workLapses.splice(index, 1);
     },
     submitForm() {
+      const lapses = this.formData.workLapses.map(lapso => ({
+        startTime: lapso.startTime,
+        endTime: lapso.endTime
+      }));
+
+      localStorage.setItem('workLapses', JSON.stringify(lapses));
+
       // Emitir los datos como un objeto plano
       this.$emit('submit', JSON.parse(JSON.stringify(this.formData)));
     }
