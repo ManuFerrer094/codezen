@@ -17,6 +17,8 @@
 </template>
 
 <script>
+import { enviarNotificacion } from '@/utils/notifications.js'; // Importa la función
+
 export default {
   name: 'WorkTimer',
   props: {
@@ -37,9 +39,9 @@ export default {
     return {
       currentTab: 0,
       isRunning: false,
-      secondsLeft: this.workDuration * 60, // Cambiado a segundos
+      secondsLeft: this.workDuration * 60,
       interval: null,
-      notificationSent: false // Para controlar cuándo enviar notificaciones
+      notificationSent: false
     };
   },
   computed: {
@@ -49,20 +51,19 @@ export default {
       return `${minutes}:${seconds}`;
     }
   },
-  watch: {
-    currentTab(newVal) {
-      this.pauseTimer();
-      this.secondsLeft = newVal === 0 ? this.workDuration * 60 : this.breakDuration * 60;
-      this.notificationSent = false; // Restablece el estado de la notificación al cambiar de fase
-    }
-  },
-  mounted() {
-    this.requestNotificationPermission();
-  },
   methods: {
+    showNotification() {
+      const title = this.currentTab === 0 ? '¡Hora de trabajar!' : '¡Es hora de descansar!';
+      const message = this.currentTab === 0
+        ? 'Mantén el enfoque y sigue adelante.'
+        : 'Tómate un respiro y relájate.';
+
+      enviarNotificacion(title, message);
+    },
     startTimer() {
       if (!this.isRunning) {
         this.isRunning = true;
+        this.showNotification(); // Mover aquí la llamada para que la notificación se muestre al iniciar
         this.interval = setInterval(() => {
           if (this.secondsLeft === 0) {
             if (this.currentTab === 0) {
@@ -74,17 +75,6 @@ export default {
             this.secondsLeft--;
           }
         }, 1000);
-
-        // Enviar notificación solo al inicio de la fase de trabajo o descanso
-        if (!this.notificationSent && this.isRunning) {
-          this.showNotification(
-            this.currentTab === 0 ? '¡Hora de trabajar!' : '¡Es hora de descansar!',
-            this.currentTab === 0
-              ? 'Mantén el enfoque y sigue adelante.'
-              : 'Tómate un respiro y relájate.'
-          );
-          this.notificationSent = true; // Marca que la notificación ya se envió
-        }
       }
     },
     pauseTimer() {
@@ -102,13 +92,13 @@ export default {
     switchMode() {
       this.currentTab = this.currentTab === 0 ? 1 : 0;
       this.secondsLeft = this.currentTab === 0 ? this.workDuration * 60 : this.breakDuration * 60;
-      this.notificationSent = false; // Restablece el estado de la notificación para la nueva fase
-      this.startTimer();
+      this.notificationSent = false;
+      this.showNotification();
     },
     manualSwitchMode() {
       this.pauseTimer();
       this.secondsLeft = this.currentTab === 0 ? this.workDuration * 60 : this.breakDuration * 60;
-      this.notificationSent = false; // Restablece el estado de la notificación al cambiar de fase manualmente
+      this.notificationSent = false;
     },
     completeBlock() {
       clearInterval(this.interval);
@@ -118,26 +108,6 @@ export default {
         this.showNotification('¡Jornada finalizada!', 'Puedes realizar el ejercicio de cierre.');
       } else {
         this.showNotification('¡Bloque completado!', 'Buen trabajo, pasa al siguiente bloque.');
-      }
-    },
-    requestNotificationPermission() {
-      if (Notification.permission !== 'granted') {
-        Notification.requestPermission().then((permission) => {
-          if (permission === 'granted') {
-            console.log('Permiso de notificaciones concedido.');
-          } else {
-            console.log('Permiso de notificaciones denegado.');
-          }
-        });
-      } else {
-        console.log('Permiso de notificaciones ya concedido.');
-      }
-    },
-    showNotification(title, body) {
-      if (Notification.permission === 'granted' && this.isRunning) {
-        new Notification(title, { body });
-      } else {
-        console.log('Notificaciones no permitidas o temporizador en pausa.');
       }
     }
   },

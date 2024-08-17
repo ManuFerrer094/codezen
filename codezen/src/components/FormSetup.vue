@@ -1,5 +1,6 @@
 <template>
   <v-form @submit.prevent="submitForm">
+    <v-card-title class="text-h5">Planifica tu Jornada</v-card-title>
     <!-- Campos del formulario -->
     <v-text-field v-model="formData.age" label="Edad" type="number" outlined required></v-text-field>
     <v-text-field v-model="formData.weight" label="Peso" type="number" outlined required></v-text-field>

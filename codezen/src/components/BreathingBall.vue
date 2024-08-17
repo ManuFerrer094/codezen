@@ -1,9 +1,10 @@
 <template>
-  <div v-if="!exerciseStarted" class="start-container">
+  <div v-if="!exerciseStarted && !exerciseCompleted" class="start-container">
     <v-btn class="start-button" @click="startExercise">Empezar ejercicio</v-btn>
   </div>
-  <div v-else class="exercise-container fullscreen-exercise" ref="exerciseContainer">
+  <div v-else-if="exerciseStarted || exerciseCompleted" class="exercise-container fullscreen-exercise" ref="exerciseContainer">
     <div
+      v-if="!exerciseCompleted"
       class="breathing-sphere"
       :style="{
         width: sphereSize + 'px',
@@ -11,14 +12,16 @@
         transition: 'width ' + transitionDuration + 's, height ' + transitionDuration + 's',
       }"
     ></div>
-    <div class="bottom-info">
+    <div v-if="!exerciseCompleted" class="bottom-info">
       <p class="breathing-text">{{ breathingInstruction }}</p>
       <p class="timer">Tiempo restante: {{ formattedTime }}</p>
     </div>
-  </div>
-  <div v-if="exerciseCompleted" class="reflection-container">
-    <h2>Reflexiones del día</h2>
-    <textarea placeholder="Escribe tus reflexiones aquí..."></textarea>
+
+    <div v-if="exerciseCompleted" class="reflection-container">
+      <h2>Reflexiones del día</h2>
+      <textarea v-model="reflection" class="reflection-textarea" placeholder="Escribe tus reflexiones aquí..."></textarea>
+      <v-btn color="primary" @click="endDay" class="mt-4">Finalizar Día</v-btn>
+    </div>
   </div>
 </template>
 
@@ -28,11 +31,12 @@ export default {
     return {
       exerciseStarted: false,
       exerciseCompleted: false,
+      reflection: '',
       sphereSize: 100, // Tamaño inicial de la esfera (pequeña)
       phase: -1,
       phaseDurations: [3, 4, 6, 2], // Duraciones de cada fase en segundos
-      exerciseDuration: 300, // Duración total del ejercicio en segundos (5 minutos)
-      secondsLeft: 300,
+      exerciseDuration: 5, // Duración total del ejercicio en segundos (5 minutos)
+      secondsLeft: 5,
       intervalId: null,
       transitionDuration: 0, // Duración de la transición en segundos
       breathingInstruction: '',
@@ -102,7 +106,6 @@ export default {
     },
     endExercise() {
       clearInterval(this.intervalId);
-      this.exitFullScreen();
       this.exerciseCompleted = true;
       this.exerciseStarted = false;
     },
@@ -112,6 +115,16 @@ export default {
           console.error("Error al salir de la pantalla completa:", err);
         });
       }
+    },
+    endDay() {
+      // Guardar la reflexión en localStorage o en el store
+      const reflections = JSON.parse(localStorage.getItem('reflections')) || [];
+      reflections.push({ date: new Date().toLocaleString(), text: this.reflection });
+      localStorage.setItem('reflections', JSON.stringify(reflections));
+
+      // Salir de pantalla completa y redirigir a la página principal
+      this.exitFullScreen();
+      this.$router.push({ name: 'Home' });
     }
   },
   beforeUnmount() {
@@ -138,6 +151,11 @@ export default {
   border-radius: 10px;
   box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
   transition: background-color 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center; /* Centra el texto horizontalmente */
+  line-height: 1; /* Asegura que la altura de línea no afecte la alineación */
 }
 
 .start-button:hover {
@@ -202,17 +220,17 @@ export default {
   color: white;
 }
 
-textarea {
-  width: 80%;
+.reflection-textarea {
+  width: 90vh;
   height: 200px;
   margin-top: 20px;
   padding: 15px;
   border-radius: 10px;
   border: none;
-  background-color: #fff;
-  color: #000;
+  background-color: #fff9d8; /* Fondo similar a la bola */
+  color: #2c003e; /* Texto en color oscuro */
   font-size: 18px;
-  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 0px 10px 30px rgba(255, 215, 0, 0.8); /* Sombra similar */
 }
 
 /* Efecto de latido para el texto */
@@ -230,4 +248,5 @@ textarea {
     opacity: 1;
   }
 }
+
 </style>

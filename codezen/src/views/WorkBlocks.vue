@@ -42,6 +42,7 @@
 
 <script>
 import WorkTimer from '@/components/WorkTimer.vue';
+import { enviarNotificacion } from '@/utils/notifications.js'; // Importa la función
 
 export default {
   components: {
@@ -50,7 +51,7 @@ export default {
   data() {
     return {
       workBlocks: [],
-      activeBlockIndex: 0 // Controla el bloque que está en curso
+      activeBlockIndex: 0
     };
   },
   computed: {
@@ -98,12 +99,9 @@ export default {
     goToEndOfDay() {
       this.$router.push('/end-of-day'); // Redirige a la página del ejercicio de cierre cuando el usuario haga clic en el botón
     },
-    showNotification(title, body) {
-      if (Notification.permission === 'granted') {
-        new Notification(title, { body });
-      } else {
-        Notification.requestPermission();
-      }
+    showNotification(title, message) {
+      // Usa la función para enviar la notificación
+      enviarNotificacion(title, message);
     }
   }
 };
