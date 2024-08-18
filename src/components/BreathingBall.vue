@@ -38,8 +38,8 @@ export default {
       sphereSize: 100, // Tamaño inicial de la esfera (pequeña)
       phase: -1,
       phaseDurations: [3, 4, 6, 2], // Duraciones de cada fase en segundos
-      exerciseDuration: 5, // Duración total del ejercicio en segundos (5 minutos)
-      secondsLeft: 5,
+      exerciseDuration: 300, // Duración total del ejercicio en segundos (5 minutos)
+      secondsLeft: 300,
       intervalId: null,
       transitionDuration: 0, // Duración de la transición en segundos
       breathingInstruction: '',
@@ -144,7 +144,7 @@ export default {
 .start-button {
   background-color: #6a00ff; /* Botón púrpura brillante */
   color: white;
-  font-size: 24px;
+  font-size: 2vh;
   padding: 15px 30px;
   border-radius: 10px;
   box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
@@ -196,7 +196,7 @@ export default {
 }
 
 .breathing-text {
-  font-size: 32px;
+  font-size: 3vh;
   font-weight: bold;
   color: #ffd700; /* Texto en amarillo para resaltar */
   animation: pulse 2s infinite;
@@ -204,7 +204,7 @@ export default {
 
 .timer {
   margin-top: 10px;
-  font-size: 24px;
+  font-size: 2vh;
   color: #bbbbbb;
 }
 

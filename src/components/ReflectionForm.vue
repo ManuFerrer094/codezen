@@ -104,7 +104,7 @@
     background-color: #f7f7f7;
     border-radius: 15px;
     box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
-    width: 70vh;
+    width: 44vh;
     max-width: 80vh;
     margin: 0 auto;
   }

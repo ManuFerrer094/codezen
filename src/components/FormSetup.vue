@@ -1,33 +1,66 @@
 <template>
   <v-form @submit.prevent="submitForm">
-    <v-card-title class="text-h5">Planifica tu Jornada</v-card-title>
-    <!-- Campo de Profesión -->
-    <v-select v-model="formData.profession" :items="professions" label="Profesión" outlined required></v-select>
+    <v-card class="custom-card pa-6">
+      <!-- Campo de Profesión -->
+      <v-select
+        v-model="formData.profession"
+        :items="professions"
+        label="Profesión"
+        outlined
+        required
+        dense
+        class="mb-4 custom-select"
+      ></v-select>
 
-    <h3>Añadir Lapsos de Tiempo</h3>
-    <div v-for="(lapso, index) in formData.workLapses" :key="index" class="lapso-container">
-      <v-select
-        v-model="lapso.startTime"
-        :items="timeOptions"
-        label="Hora de Inicio"
+      <!-- Añadir Lapsos de Tiempo -->
+      <h3 class="subtitle mb-3">Añadir Lapsos de Tiempo</h3>
+      <div v-for="(lapso, index) in formData.workLapses" :key="index" class="lapso-container mb-4">
+        <v-select
+          v-model="lapso.startTime"
+          :items="timeOptions"
+          label="Hora de Inicio"
+          outlined
+          dense
+          required
+          class="mr-2 custom-select"
+        ></v-select>
+        <v-select
+          v-model="lapso.endTime"
+          :items="timeOptions"
+          label="Hora de Fin"
+          outlined
+          dense
+          required
+          class="ml-2 custom-select"
+        ></v-select>
+        <v-btn color="error" @click="removeLapso(index)" icon class="ml-2 custom-delete-btn">
+          <v-icon>mdi-delete</v-icon>
+        </v-btn>
+      </div>
+
+      <!-- Botón para agregar lapso -->
+      <v-btn
+        color="primary"
+        @click="addLapso"
+        class="add-button mt-4"
+        block
         outlined
-        required
-      ></v-select>
-      <v-select
-        v-model="lapso.endTime"
-        :items="timeOptions"
-        label="Hora de Fin"
-        outlined
-        required
-      ></v-select>
-      <v-btn color="error" @click="removeLapso(index)" icon>
-        <v-icon>mdi-delete</v-icon>
+        large
+      >
+        Agregar Lapso
       </v-btn>
-    </div>
 
-    <v-btn color="primary" @click="addLapso" class="mt-4">Agregar Lapso</v-btn>
-    
-    <v-btn color="primary" type="submit" class="mt-4">Generar Bloques de Trabajo</v-btn>
+      <!-- Botón para enviar formulario -->
+      <v-btn
+        color="success"
+        type="submit"
+        class="submit-button mt-4"
+        block
+        large
+      >
+        Generar Bloques de Trabajo
+      </v-btn>
+    </v-card>
   </v-form>
 </template>
 
@@ -75,7 +108,6 @@ export default {
 
       localStorage.setItem('workLapses', JSON.stringify(lapses));
 
-      // Emitir los datos como un objeto plano
       this.$emit('submit', JSON.parse(JSON.stringify(this.formData)));
     }
   }
@@ -83,9 +115,101 @@ export default {
 </script>
 
 <style scoped>
+/* Estilo personalizado para una apariencia más profunda y moderna */
+
+/* Colores para el modo claro y oscuro */
+.custom-card {
+  background-color: var(--v-surface-base);
+  color: var(--v-text-base);
+  border-radius: 16px;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+.subtitle {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  font-size: 18px;
+  color: var(--v-text-base); /* Texto que se adapta al tema */
+  margin-bottom: 16px;
+}
+
 .lapso-container {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
+}
+
+.custom-select {
+  font-family: 'Poppins', sans-serif;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.custom-select .v-input__control {
+  background-color: var(--v-surface-variant);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ddd;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.custom-select:hover .v-input__control {
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.custom-select .v-label {
+  color: var(--v-text-secondary);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.custom-delete-btn {
+  padding: 0;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 50%;
+  background-color: #ff6b6b;
+  transition: background-color 0.3s ease;
+}
+
+.custom-delete-btn:hover {
+  background-color: #ff4a4a;
+}
+
+.add-button {
+  color: var(--v-primary-base);
+  border-color: var(--v-primary-base);
+  border-radius: 12px;
+  transition: background-color 0.3s ease;
+}
+
+.add-button:hover {
+  background-color: var(--v-primary-base);
+  color: white;
+}
+
+.submit-button {
+  background-color: var(--v-success-base);
+  color: white;
+  border-radius: 12px;
+  transition: background-color 0.3s ease;
+}
+
+.submit-button:hover {
+  background-color: var(--v-success-darken);
+}
+
+.v-btn {
+  font-family: 'Poppins', sans-serif;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+/* Transiciones suaves */
+.v-btn,
+.custom-select .v-input__control {
+  transition: all 0.3s ease;
 }
 </style>
