@@ -20,13 +20,11 @@ jobs:
 
       - name: Navigate to frontend directory and install dependencies
         run: |
-          cd codezen
           npm install
           npm run build
 
       - name: Zip artifact for deployment
         run: |
-          cd codezen
           zip -r release.zip dist/
 
       - name: Upload artifact for deployment job
