@@ -313,16 +313,25 @@ const exportToPDF = () => {
   const rowColorOdd = [255, 255, 255]; // Color de fila impar
   const borderColor = [0, 0, 0]; // Color negro para las líneas de las celdas
 
+  // Calcular el total de horas trabajadas
+  const totalHoursWorked = reflections.value.reduce((total, reflection) => {
+    return total + Number(reflection.hoursWorked);
+  }, 0);
+
   // Generar la tabla con los colores definidos y bordes
   doc.autoTable({
     startY: 60, // Inicia la tabla debajo del título
     head: [['Fecha', 'Reflexión', 'Ánimo', 'Horas Trabajadas']],
-    body: reflections.value.map(reflection => [
-      reflection.date,
-      reflection.text,
-      reflection.sentiment,
-      reflection.hoursWorked,
-    ]),
+    body: [
+      ...reflections.value.map(reflection => [
+        reflection.date,
+        reflection.text,
+        reflection.sentiment,
+        reflection.hoursWorked,
+      ]),
+      // Fila de total de horas trabajadas
+      [{ content: 'Total de Horas Trabajadas', colSpan: 3, styles: { halign: 'right', fillColor: rowColorOdd } }, totalHoursWorked.toString()],
+    ],
     headStyles: {
       fillColor: headerColor,
       textColor: headerTextColor,
@@ -345,16 +354,14 @@ const exportToPDF = () => {
     },
   });
 
-  // Espacio para firma
+  // Espacio para firma, alineado con los dos puntos
+  const signatureLineXStart = doc.getTextWidth('Firma del empleado: ') + 22; // Calcula la longitud del texto y ajusta el inicio
   doc.text('Firma del empleado:', 20, doc.autoTable.previous.finalY + 30);
-  doc.line(60, doc.autoTable.previous.finalY + 30, 150, doc.autoTable.previous.finalY + 30); // Línea para la firma
+  doc.line(signatureLineXStart, doc.autoTable.previous.finalY + 30, 150, doc.autoTable.previous.finalY + 30); // Línea para la firma
 
   // Guardar el PDF
   doc.save('registro-reflexiones.pdf');
 };
-
-
-
 
 const clearFilters = () => {
   filters.value.sentiment = ''

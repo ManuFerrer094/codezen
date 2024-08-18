@@ -16,14 +16,29 @@
       <div class="sentiment-selection mb-4">
         <p>¿Cómo te sientes hoy?</p>
         <v-row>
-          <v-col cols="4" class="sentiment-icon" @click="selectSentiment('happy')">
-            😊 Feliz
+          <v-col
+            cols="4"
+            class="sentiment-icon"
+            :class="{ selected: selectedSentiment === 'Happy' }"
+            @click="selectSentiment('Happy')"
+          >
+            😊
           </v-col>
-          <v-col cols="4" class="sentiment-icon" @click="selectSentiment('neutral')">
-            😐 Neutral
+          <v-col
+            cols="4"
+            class="sentiment-icon"
+            :class="{ selected: selectedSentiment === 'Neutral' }"
+            @click="selectSentiment('Neutral')"
+          >
+            😐
           </v-col>
-          <v-col cols="4" class="sentiment-icon" @click="selectSentiment('sad')">
-            😔 Triste
+          <v-col
+            cols="4"
+            class="sentiment-icon"
+            :class="{ selected: selectedSentiment === 'Sad' }"
+            @click="selectSentiment('Sad')"
+          >
+            😔
           </v-col>
         </v-row>
       </div>
@@ -49,7 +64,7 @@
         const lapses = JSON.parse(localStorage.getItem('workLapses')) || [];
         let totalHours = 0;
   
-        lapses.forEach(lapso => {
+        lapses.forEach((lapso) => {
           const startHour = parseInt(lapso.startTime.split(':')[0]);
           const endHour = parseInt(lapso.endTime.split(':')[0]);
           totalHours += endHour - startHour;
@@ -60,7 +75,7 @@
       saveReflection() {
         // Validación básica
         if (!this.reflection || !this.selectedSentiment) {
-          alert("Por favor, completa todos los campos.");
+          alert('Por favor, completa todos los campos.');
           return;
         }
   
@@ -79,8 +94,8 @@
   
         // Redirigir a la página de inicio después de guardar
         this.$router.push({ name: 'Home' });
-      }
-    }
+      },
+    },
   };
   </script>
   
@@ -89,7 +104,8 @@
     background-color: #f7f7f7;
     border-radius: 15px;
     box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
-    max-width: 600px;
+    width: 70vh;
+    max-width: 80vh;
     margin: 0 auto;
   }
   
@@ -101,12 +117,19 @@
     font-size: 30px;
     cursor: pointer;
     padding: 10px;
-    transition: background-color 0.3s ease;
+    transition: transform 0.3s ease, background-color 0.3s ease;
   }
   
   .sentiment-icon:hover {
+    transform: scale(1.2); /* Efecto de zoom al hacer hover */
     background-color: rgba(255, 255, 255, 0.2);
     border-radius: 10px;
+  }
+  
+  .sentiment-icon.selected {
+    background-color: rgba(255, 255, 255, 0.4); /* Color de fondo al estar seleccionado */
+    border-radius: 10px;
+    transform: scale(1.5); /* Escalar un poco más cuando está seleccionado */
   }
   </style>
   

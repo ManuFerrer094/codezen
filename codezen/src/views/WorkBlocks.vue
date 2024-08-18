@@ -1,34 +1,43 @@
 <template>
   <v-container class="work-blocks" fluid>
+    <h2 class="work-title">¡A por la jornada!</h2>
     <div v-if="!allBlocksCompleted">
-      <h2>Bloques de Trabajo Generados</h2>
-      <div v-for="(block, index) in workBlocks" :key="index">
-        <v-card
-          :class="{
-            'block-completed': block.completed,
-            'block-incomplete': !block.completed
-          }"
-          class="mb-4"
+      <v-row class="justify-center">
+        <v-col
+          v-for="(block, index) in workBlocks"
+          :key="index"
+          cols="12"
+          md="8"
+          class="d-flex justify-center"
         >
-          <v-card-title>{{ block.time }}</v-card-title>
-          <v-card-text>
-            <WorkTimer
-              v-if="activeBlockIndex === index"
-              ref="workTimer"
-              :workDuration="block.workDuration"
-              :breakDuration="block.breakDuration"
-              @workComplete="handleWorkComplete"
-              @breakComplete="handleBreakComplete"
-              :isLastBlock="index === workBlocks.length - 1"
-            />
-            <p v-if="block.completed">Bloque completado</p>
-          </v-card-text>
-        </v-card>
-      </div>
-    </div>
-    <div v-else>
-      <h3>Todos los bloques han sido completados</h3>
-      <v-btn @click="goToEndOfDay" color="primary">Ir al Ejercicio de Cierre</v-btn>
+          <v-card
+            :class="[
+              block.completed ? 'block-completed' : 'block-incomplete',
+              activeBlockIndex === index && currentPhase === 'work'
+                ? 'block-active-work'
+                : activeBlockIndex === index && currentPhase === 'break'
+                ? 'block-active-break'
+                : ''
+            ]"
+            class="work-block-card no-padding"
+          >
+            <v-card-title>{{ block.time }}</v-card-title>
+            <v-card-text>
+              <WorkTimer
+                v-if="activeBlockIndex === index"
+                ref="workTimer"
+                :workDuration="block.workDuration"
+                :breakDuration="block.breakDuration"
+                @workComplete="handleWorkComplete"
+                @breakComplete="handleBreakComplete"
+                :isLastBlock="index === workBlocks.length - 1"
+                @phaseChange="handlePhaseChange"
+              />
+              <p v-if="block.completed" class="block-status">Bloque completado</p>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
     </div>
 
     <!-- Modal para notificaciones -->
@@ -57,8 +66,9 @@ export default {
       notificationVisible: false,
       notificationTitle: '',
       notificationMessage: '',
-      totalHoursWorked: 0, // Nuevo: Para almacenar el total de horas trabajadas
-      nextAction: null // Acción a ejecutar después de aceptar la notificación
+      totalHoursWorked: 0,
+      nextAction: null,
+      currentPhase: 'work' // Fase actual: trabajo o descanso
     };
   },
   computed: {
@@ -95,26 +105,26 @@ export default {
       this.showNotification(
         "¡Empieza el primer bloque de trabajo!", 
         "Recuerda mantener tu enfoque.", 
-        this.startFirstBlock // Inicia el primer bloque después de aceptar
+        this.startFirstBlock
       );
     }
   },
   methods: {
     handleWorkComplete() {
-      this.totalHoursWorked += 1; // Incrementa las horas trabajadas
+      this.totalHoursWorked += 1;
       this.showNotification(
         "¡Es hora de descansar!",
         "Relájate antes de empezar el siguiente bloque.",
-        this.startBreak // Inicia el descanso después de aceptar
+        this.startBreak
       );
     },
     handleBreakComplete() {
-      this.completeBlock(this.activeBlockIndex); // Completa el bloque actual
+      this.completeBlock(this.activeBlockIndex);
       if (this.activeBlockIndex < this.workBlocks.length - 1) {
         this.showNotification(
           `Bloque ${this.activeBlockIndex + 1} completado`,
           "Prepárate para el siguiente bloque de trabajo.",
-          this.startNextBlock // Inicia el siguiente bloque después del descanso
+          this.startNextBlock
         );
       } else {
         this.showNotification("Todos los bloques completados", "¡Buen trabajo!", this.goToEndOfDay);
@@ -124,7 +134,6 @@ export default {
       this.workBlocks[index].completed = true;
     },
     goToEndOfDay() {
-      // Almacenar las horas trabajadas en el localStorage
       localStorage.setItem('totalHoursWorked', this.totalHoursWorked);
       this.$router.push('/end-of-day');
     },
@@ -132,47 +141,102 @@ export default {
       this.notificationTitle = title;
       this.notificationMessage = message;
       this.notificationVisible = true;
-      this.nextAction = action; // Guarda la acción que se ejecutará al aceptar
+      this.nextAction = action;
     },
     handleNotificationAccept() {
-      this.notificationVisible = false; // Cierra la notificación
+      this.notificationVisible = false;
       if (this.nextAction) {
-        this.nextAction(); // Ejecuta la acción pendiente
+        this.nextAction();
       }
     },
     startFirstBlock() {
       if (this.$refs.workTimer) {
-        this.$refs.workTimer[0].startTimer(); // Asegura que se inicie el primer bloque
+        this.$refs.workTimer[0].startTimer();
       }
     },
     startNextBlock() {
       if (this.activeBlockIndex < this.workBlocks.length - 1) {
-        this.activeBlockIndex++; // Pasa al siguiente bloque
+        this.activeBlockIndex++;
         this.$nextTick(() => {
           if (this.$refs.workTimer && this.$refs.workTimer[0]) {
             this.showNotification(
               "¡Empieza el siguiente bloque de trabajo!",
               "Mantén tu enfoque en el trabajo.",
               () => this.$refs.workTimer[0].startTimer()
-            ); // Notificación para empezar el siguiente bloque
+            );
           }
         });
       }
     },
     startBreak() {
       if (this.$refs.workTimer && this.$refs.workTimer[0]) {
-        this.$refs.workTimer[0].startBreak(); // Inicia el temporizador del descanso
+        this.$refs.workTimer[0].startBreak();
       }
+    },
+    handlePhaseChange(phase) {
+      this.currentPhase = phase; // Actualiza la fase actual cuando cambie
     }
   }
 };
 </script>
 
 <style scoped>
-.block-completed {
-  background-color: #e0ffe0;
+.work-block-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 30px;
 }
+
+.work-title {
+  margin-bottom: 30px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.work-block-card {
+  width: 90%;
+  padding: 20px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.block-completed {
+  border-left: 10px solid #00cc00;
+}
+
 .block-incomplete {
-  background-color: #ffe0e0;
+  border-left: 10px solid #ff0000;
+}
+
+.block-active-work {
+  background-image: linear-gradient(135deg, #ff7e5f, #feb47b);
+  border-left: 10px solid #ffa500;
+}
+
+.block-active-break {
+  background-image: linear-gradient(135deg, #43cea2, #185a9d);
+  border-left: 10px solid #ffa500;
+}
+
+.block-status {
+  font-weight: bold;
+  color: #006600;
+}
+
+.all-completed-container {
+  text-align: center;
+  padding: 50px;
+}
+
+.finish-btn {
+  background-color: #43cea2;
+  color: white;
+  margin-top: 20px;
+}
+
+.no-padding {
+  padding: 0;
 }
 </style>
