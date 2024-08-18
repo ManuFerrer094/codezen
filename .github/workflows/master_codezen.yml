@@ -22,17 +22,27 @@ jobs:
         run: |
           cd codezen
           npm install
+
+      - name: Build project
+        run: |
+          cd codezen
           npm run build
+
+      - name: Verify dist directory
+        run: |
+          cd codezen
+          if [ -d "dist" ]; then echo "Dist exists"; else echo "Dist not found"; exit 1; fi
 
       - name: Zip artifact for deployment
         run: |
+          cd codezen
           zip -r release.zip dist/
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: release.zip
+          path: codezen/release.zip
 
   deploy:
     runs-on: ubuntu-latest
