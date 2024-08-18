@@ -13,8 +13,8 @@
       }"
     ></div>
     <div v-if="!exerciseCompleted" class="bottom-info">
-      <p class="breathing-text">{{ breathingInstruction }}</p>
-      <p class="timer">Tiempo restante: {{ formattedTime }}</p>
+      <p class="breathing-text breathing-left">{{ breathingInstruction }}</p>
+      <p class="timer breathing-right">Tiempo restante: {{ formattedTime }}</p>
     </div>
 
     <!-- Reflexión y Sentimiento -->
@@ -190,20 +190,23 @@ export default {
 .bottom-info {
   position: absolute;
   bottom: 20px;
-  left: 20px;
-  text-align: left;
+  width: 100%; /* Aseguramos que ocupe todo el ancho */
+  display: flex;
+  justify-content: space-between; /* Coloca los elementos en las esquinas */
+  padding: 0 20px; /* Espaciado lateral */
   color: white;
 }
 
-.breathing-text {
+.breathing-left {
+  text-align: left;
   font-size: 3vh;
   font-weight: bold;
   color: #ffd700; /* Texto en amarillo para resaltar */
   animation: pulse 2s infinite;
 }
 
-.timer {
-  margin-top: 10px;
+.breathing-right {
+  text-align: right;
   font-size: 2vh;
   color: #bbbbbb;
 }
