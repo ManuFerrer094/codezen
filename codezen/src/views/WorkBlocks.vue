@@ -174,7 +174,7 @@ export default {
       }
     },
     handlePhaseChange(phase) {
-      this.currentPhase = phase; // Actualiza la fase actual cuando cambie
+      this.currentPhase = phase;
     }
   }
 };
