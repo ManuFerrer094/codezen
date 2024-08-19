@@ -90,10 +90,8 @@
           hoursWorked: totalHoursWorked, // Añadir las horas trabajadas calculadas
           sentiment: this.selectedSentiment,
         });
-        localStorage.setItem('reflections', JSON.stringify(reflections));
-  
-        // Redirigir a la página de inicio después de guardar
-        this.$router.push({ name: 'Home' });
+        localStorage.setItem('reflections', JSON.stringify(reflections));  
+        this.$router.push({ name: 'MyReflections' });
       },
     },
   };

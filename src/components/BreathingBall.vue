@@ -38,8 +38,8 @@ export default {
       sphereSize: 100, // Tamaño inicial de la esfera (pequeña)
       phase: -1,
       phaseDurations: [3, 4, 6, 2], // Duraciones de cada fase en segundos
-      exerciseDuration: 10, // Duración total del ejercicio en segundos (5 minutos)
-      secondsLeft: 10,
+      exerciseDuration: 15, // Duración total del ejercicio en segundos (5 minutos)
+      secondsLeft: 15,
       intervalId: null,
       transitionDuration: 0, // Duración de la transición en segundos
       breathingInstruction: '',
