@@ -1,21 +1,104 @@
 <template>
   <div v-if="!exerciseStarted && !exerciseCompleted" class="start-container">
-    <v-btn class="start-button" @click="startExercise">Empezar ejercicio</v-btn>
+    <v-dialog v-model="dialogVisible" max-width="500px">
+      <v-card>
+        <!-- Paso 1: Guía de Respiración -->
+        <div v-if="currentStep === 1">
+          <v-card-title class="headline">Guía de Respiración</v-card-title>
+          <v-card-text>
+            <p>Este ejercicio de respiración te ayudará a relajarte. Sigue las indicaciones en pantalla:</p>
+            <ul>
+              <li>Inhala cuando la esfera se expanda.</li>
+              <li>Aguanta el aire cuando la esfera esté completamente expandida.</li>
+              <li>Exhala cuando la esfera se contraiga.</li>
+              <li>Repite este ciclo hasta que finalice el ejercicio.</li>
+            </ul>
+          </v-card-text>
+          <v-card-actions>
+            <v-btn color="primary" @click="nextStep">Siguiente</v-btn>
+          </v-card-actions>
+        </div>
+
+        <!-- Paso 2: Personalización de Colores -->
+        <div v-if="currentStep === 2">
+          <v-card-title class="headline">Personalización de Colores</v-card-title>
+          <v-card-text>
+            <div class="color-configuration">
+              <!-- Columna 1: Selectores de Color -->
+              <div class="color-selectors">
+                <label>Color de fondo:</label>
+                <div class="color-input-container">
+                  <input type="color" v-model="backgroundColor" class="color-input"/>
+                </div>
+
+                <label>Color de la esfera:</label>
+                <div class="color-input-container">
+                  <input type="color" v-model="sphereColor" class="color-input"/>
+                </div>
+
+                <label>Color de la sombra:</label>
+                <div class="color-input-container">
+                  <input type="color" v-model="shadowColor" class="color-input"/>
+                </div>
+              </div>
+
+              <!-- Columna 2: Vista previa -->
+              <div class="preview-container" :style="{ backgroundColor: backgroundColor }">
+                <div class="preview-sphere" :style="previewStyle"></div>
+              </div>
+            </div>
+          </v-card-text>
+          <v-card-actions>
+            <v-btn @click="previousStep">Atrás</v-btn>
+            <v-btn color="primary" @click="nextStep">Siguiente</v-btn>
+          </v-card-actions>
+        </div>
+
+        <!-- Paso 3: Selección de Tiempo -->
+        <div v-if="currentStep === 3">
+          <v-card-title class="headline">Selecciona la Duración</v-card-title>
+          <v-card-text>
+            <v-radio-group v-model="selectedDuration" :mandatory="false">
+              <v-radio label="1 minuto" :value="60"></v-radio>
+              <v-radio label="3 minutos" :value="180"></v-radio>
+              <v-radio label="5 minutos" :value="300"></v-radio>
+            </v-radio-group>
+          </v-card-text>
+          <v-card-actions>
+            <v-btn @click="previousStep">Atrás</v-btn>
+            <v-btn color="primary" @click="confirmDuration">Confirmar</v-btn>
+          </v-card-actions>
+        </div>
+      </v-card>
+    </v-dialog>
   </div>
-  <div v-else-if="exerciseStarted || exerciseCompleted" class="exercise-container fullscreen-exercise" ref="exerciseContainer">
+
+  <div v-else-if="exerciseStarted || exerciseCompleted" class="exercise-container fullscreen-exercise" :style="{ backgroundColor: backgroundColor }" ref="exerciseContainer">
     <div
       v-if="!exerciseCompleted"
-      class="breathing-sphere"
-      :style="{
-        width: sphereSize + 'px',
-        height: sphereSize + 'px',
-        transition: 'width ' + transitionDuration + 's, height ' + transitionDuration + 's',
-      }"
+      class="breathing-sphere animated-breathing"
+      :style="sphereStyle"
     ></div>
-    <div v-if="!exerciseCompleted" class="bottom-info">
-      <p class="breathing-text breathing-left">{{ breathingInstruction }}</p>
-      <p class="timer breathing-right">Tiempo restante: {{ formattedTime }}</p>
-    </div>
+
+    <!-- Contenedor negro para el visual-timer y los botones -->
+    <transition name="fade">
+      <div v-if="!exerciseCompleted && showControls" class="control-container">
+        <!-- Barra de progreso visual -->
+        <div class="visual-timer" :style="{ width: visualTimerWidth + '%' }"></div>
+
+        <!-- Botones para pausar/reanudar y terminar -->
+        <div class="action-buttons">
+          <v-btn class="icon-button pause-button" @click="togglePause">
+            <v-icon v-if="!isPaused" class="icon">mdi-pause</v-icon>
+            <v-icon v-else class="icon">mdi-play</v-icon>
+          </v-btn>
+
+          <v-btn class="icon-button end-button" @click="endExercise">
+            <v-icon class="icon">mdi-stop</v-icon>
+          </v-btn>
+        </div>
+      </div>
+    </transition>
 
     <!-- Reflexión y Sentimiento -->
     <div v-if="exerciseCompleted" class="reflection-container">
@@ -35,25 +118,69 @@ export default {
     return {
       exerciseStarted: false,
       exerciseCompleted: false,
-      sphereSize: 100, // Tamaño inicial de la esfera (pequeña)
+      isPaused: false,
+      sphereSize: 100,
       phase: -1,
-      phaseDurations: [3, 4, 6, 2], // Duraciones de cada fase en segundos
-      exerciseDuration: 15, // Duración total del ejercicio en segundos (5 minutos)
-      secondsLeft: 15,
+      phaseDurations: [3, 4, 6, 2],
+      exerciseDuration: 60,
+      secondsLeft: 60,
       intervalId: null,
-      transitionDuration: 0, // Duración de la transición en segundos
-      breathingInstruction: '',
+      transitionDuration: 0,
+      dialogVisible: true,
+      currentStep: 1, // Paso actual
+      selectedDuration: 60,
+      sphereColor: '#ffd700', // Color inicial de la esfera
+      backgroundColor: '#2c003e', // Color inicial de fondo
+      shadowColor: '#ffd700', // Color inicial de la sombra
+      gainNode: null,
+      campanaBuffer: null,
+      gongBuffer: null,
+      showControls: true,
     };
   },
   computed: {
-    formattedTime() {
-      const minutes = Math.floor(this.secondsLeft / 60).toString().padStart(2, '0');
-      const seconds = (this.secondsLeft % 60).toString().padStart(2, '0');
-      return `${minutes}:${seconds}`;
+    sphereStyle() {
+      return {
+        width: `${this.sphereSize}px`,
+        height: `${this.sphereSize}px`,
+        transition: `width ${this.transitionDuration}s ease-in-out, height ${this.transitionDuration}s ease-in-out`,
+        backgroundColor: this.sphereColor,
+        boxShadow: `0px 10px 30px ${this.shadowColor}`,
+        borderRadius: '50%',
+      };
     },
+    previewStyle() {
+      return {
+        width: '100px',
+        height: '100px',
+        backgroundColor: this.sphereColor,
+        boxShadow: `0px 10px 30px ${this.shadowColor}`,
+        borderRadius: '50%',
+        transition: 'all 0.3s ease-in-out',
+      };
+    },
+    visualTimerWidth() {
+      return (this.secondsLeft / this.exerciseDuration) * 100;
+    }
   },
   methods: {
-    startExercise() {
+    nextStep() {
+      if (this.currentStep < 3) {
+        this.currentStep++;
+      }
+    },
+    previousStep() {
+      if (this.currentStep > 1) {
+        this.currentStep--;
+      }
+    },
+    confirmDuration() {
+      this.exerciseDuration = this.selectedDuration;
+      this.secondsLeft = this.exerciseDuration;
+      this.dialogVisible = false;
+      this.startExercise();
+    },
+    async startExercise() {
       this.exerciseStarted = true;
       this.$nextTick(() => {
         const exerciseElement = this.$refs.exerciseContainer;
@@ -61,73 +188,96 @@ export default {
           exerciseElement.requestFullscreen().catch((err) => {
             console.error("Error al intentar entrar en modo pantalla completa:", err);
           });
-        } else {
-          console.error("requestFullscreen no está disponible en el elemento.");
         }
       });
 
       this.phase = 0;
       this.startExerciseTimer();
       this.startPhase();
+      this.setupAutoHideControls();
     },
     startExerciseTimer() {
       this.intervalId = setInterval(() => {
-        this.secondsLeft--;
-        if (this.secondsLeft <= 0) {
-          this.endExercise();
+        if (!this.isPaused) {
+          this.secondsLeft--;
+          if (this.secondsLeft <= 0) {
+            this.endExercise(true); // Pasamos true para indicar que terminó automáticamente
+          }
         }
       }, 1000);
+    },
+    async endExercise(autoComplete = false) {
+      clearInterval(this.intervalId);
+      this.exerciseCompleted = true;
+      this.exerciseStarted = false;
+      this.secondsLeft = 0; // Resetea el contador de tiempo a 0
+      if (autoComplete || !this.exerciseStarted) {
+        this.showReflectionForm();
+      }
     },
     startPhase() {
       switch (this.phase) {
         case 0: // Inhalar
-          this.sphereSize = 300; // La esfera crece
+          this.sphereSize = 300;
           this.transitionDuration = this.phaseDurations[this.phase];
-          this.breathingInstruction = 'Inhala';
           break;
         case 1: // Retener
-          this.sphereSize = 300; // La esfera se mantiene inflada
-          this.transitionDuration = 0; // Sin transición
-          this.breathingInstruction = 'Aguanta el aire';
+          this.sphereSize = 300;
+          this.transitionDuration = 0;
           break;
         case 2: // Exhalar
-          this.sphereSize = 100; // La esfera se desinfla
+          this.sphereSize = 100;
           this.transitionDuration = this.phaseDurations[this.phase];
-          this.breathingInstruction = 'Exhala';
           break;
         case 3: // Esperar
-          this.sphereSize = 100; // La esfera se mantiene desinflada
-          this.transitionDuration = 0; // Sin transición
-          this.breathingInstruction = 'Aguanta sin aire';
+          this.sphereSize = 100;
+          this.transitionDuration = 0;
           break;
       }
 
       setTimeout(() => {
         this.phase = (this.phase + 1) % 4;
-        this.startPhase();
+        if (!this.isPaused) {
+          this.startPhase();
+        }
       }, this.phaseDurations[this.phase] * 1000);
     },
-    endExercise() {
-      clearInterval(this.intervalId);
-      this.exerciseCompleted = true;
-      this.exerciseStarted = false;
-    },
-    exitFullScreen() {
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch((err) => {
-          console.error("Error al salir de la pantalla completa:", err);
-        });
+    togglePause() {
+      this.isPaused = !this.isPaused;
+      if (!this.isPaused) {
+        this.startPhase(); // Reanudar la fase actual si el ejercicio se ha pausado
       }
     },
+    setupAutoHideControls() {
+      let hideTimeout;
+      const hideControls = () => {
+        this.showControls = false;
+      };
+
+      const resetHideTimeout = () => {
+        if (!this.exerciseCompleted) {
+          this.showControls = true;
+          clearTimeout(hideTimeout);
+          hideTimeout = setTimeout(hideControls, 3000); // Ocultar después de 3 segundos
+        }
+      };
+
+      // Escuchar movimiento del ratón
+      window.addEventListener('mousemove', resetHideTimeout);
+
+      resetHideTimeout(); // Comenzar el temporizador al iniciar el ejercicio
+    },
+    showReflectionForm() {
+      this.exerciseCompleted = true;
+    },
     endDay() {
-      // Salir de pantalla completa y redirigir a la página principal
-      this.exitFullScreen();
-      this.$router.push({ name: 'Home' }); // Redirigir a la página de inicio
+      this.exerciseCompleted = false;
+      this.$router.push({ name: 'Home' }); // Redirigir a la página de inicio o cualquier otra lógica
     }
   },
   beforeUnmount() {
     clearInterval(this.intervalId);
-    this.exitFullScreen(); // Asegurarse de salir de pantalla completa si se desmonta el componente
+    window.removeEventListener('mousemove', this.setupAutoHideControls); // Eliminar el event listener
   }
 };
 </script>
@@ -138,26 +288,7 @@ export default {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #2c003e; /* Color de fondo oscuro para un efecto inmersivo */
-}
-
-.start-button {
-  background-color: #6a00ff; /* Botón púrpura brillante */
-  color: white;
-  font-size: 2vh;
-  padding: 15px 30px;
-  border-radius: 10px;
-  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
-  transition: background-color 0.3s ease;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center; /* Centra el texto horizontalmente */
-  line-height: 1; /* Asegura que la altura de línea no afecte la alineación */
-}
-
-.start-button:hover {
-  background-color: #4b0082; /* Cambia a un púrpura más oscuro al pasar el ratón */
+  background-color: #2c003e;
 }
 
 .exercise-container {
@@ -165,14 +296,12 @@ export default {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-color: #2c003e; /* Color de fondo oscuro */
   width: 100vw;
   height: 100vh;
   position: relative;
 }
 
 .fullscreen-exercise {
-  /* Ocupa la pantalla completa con la esfera */
   width: 100vw;
   height: 100vh;
   position: fixed;
@@ -182,59 +311,141 @@ export default {
 }
 
 .breathing-sphere {
-  background-color: #ffd700; /* Color de la bola: amarillo brillante como el sol */
-  border-radius: 50%;
-  box-shadow: 0px 10px 30px rgba(255, 215, 0, 0.8);
+  transition: all 1s ease-in-out; /* Hacer la animación más suave y prolongada */
 }
 
-.bottom-info {
+.animated-breathing {
+  animation: colorPulse 3s ease-in-out infinite, brightnessPulse 2s ease-in-out infinite;
+}
+
+/* Animación para el cambio de color, brillo y contraste */
+@keyframes colorPulse {
+  0%, 100% {
+    filter: brightness(100%) contrast(100%);
+  }
+  50% {
+    filter: brightness(120%) contrast(110%);
+  }
+}
+
+@keyframes brightnessPulse {
+  0%, 100% {
+    filter: brightness(100%);
+  }
+  50% {
+    filter: brightness(130%);
+  }
+}
+
+/* Transición para el contenedor de controles */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter, .fade-leave-to /* .fade-leave-active en versiones anteriores de Vue */ {
+  opacity: 0;
+}
+
+/* Contenedor para el visual-timer y los botones */
+.control-container {
   position: absolute;
-  bottom: 20px;
-  width: 100%; /* Aseguramos que ocupe todo el ancho */
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #000; /* Fondo negro */
+  padding: 10px 0;
   display: flex;
-  justify-content: space-between; /* Coloca los elementos en las esquinas */
-  padding: 0 20px; /* Espaciado lateral */
-  color: white;
+  justify-content: space-between; /* Repartir los botones */
+  align-items: center;
+  flex-direction: row;
 }
 
-.breathing-left {
-  text-align: left;
-  font-size: 3vh;
-  font-weight: bold;
-  color: #ffd700; /* Texto en amarillo para resaltar */
-  animation: pulse 2s infinite;
+/* Barra de progreso visual */
+.visual-timer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background-color: #676767;
+  transition: width 1s linear;
 }
 
-.breathing-right {
-  text-align: right;
-  font-size: 2vh;
-  color: #bbbbbb;
+/* Botones de acción */
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 20px; /* Espaciado de los botones */
 }
 
+.icon-button {
+  width: 50px;
+  height: 50px;
+  background-color: #fff; /* Fondo blanco */
+  border-radius: 50%; /* Asegurar que los botones sean redondos */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.icon-button .icon {
+  fill: #000;
+  font-size: 24px;
+}
+
+/* Reflexión y Sentimiento */
 .reflection-container {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #2c003e;
   color: white;
 }
 
-.reflection-textarea {
-  width: 90vh;
-  height: 200px;
-  margin-top: 20px;
-  padding: 15px;
-  border-radius: 10px;
-  border: none;
-  background-color: #fff9d8; /* Fondo similar a la bola */
-  color: #2c003e; /* Texto en color oscuro */
-  font-size: 18px;
-  box-shadow: 0px 10px 30px rgba(255, 215, 0, 0.8); /* Sombra similar */
+/* Color Selector Styles */
+.color-configuration {
+  display: flex;
+  justify-content: space-between;
 }
 
-/* Efecto de latido para el texto */
+.color-selectors {
+  margin-right: 20px;
+}
+
+.color-input-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.color-input {
+  width: 100px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Vista previa de la esfera */
+.preview-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 30vh;
+  height: 20vh;
+  transition: all 0.3s ease-in-out;
+}
+
+.preview-sphere {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Animaciones */
 @keyframes pulse {
   0% {
     transform: scale(1);
