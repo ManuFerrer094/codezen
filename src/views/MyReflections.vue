@@ -124,7 +124,13 @@ const loadReflections = () => {
 
 const exportToPDF = () => {
   const doc = new jsPDF();
+
+  // Configura el título del PDF
+  doc.setFontSize(18);
+  doc.setTextColor('#6a00ff');  // Título en color morado
   doc.text('Registro de Reflexiones', 20, 20);
+
+  // Exporta la tabla con un estilo personalizado
   doc.autoTable({
     head: [['Fecha', 'Reflexión', 'Ánimo', 'Horas Trabajadas']],
     body: reflections.value.map(reflection => [
@@ -132,8 +138,34 @@ const exportToPDF = () => {
       reflection.text,
       reflection.sentiment,
       reflection.hoursWorked
-    ])
+    ]),
+    // Estilos personalizados para que se asemeje a la tabla HTML
+    headStyles: {
+      fillColor: [106, 0, 255], // Color de fondo morado para el encabezado
+      textColor: [255, 255, 255], // Color del texto blanco
+      halign: 'left', // Alineación a la izquierda
+      fontSize: 12,
+      padding: 10
+    },
+    bodyStyles: {
+      fillColor: [245, 245, 245], // Fondo gris claro para las celdas del cuerpo
+      textColor: [0, 0, 0], // Color del texto negro
+      fontSize: 10,
+      padding: 10
+    },
+    alternateRowStyles: {
+      fillColor: [255, 255, 255] // Fondo blanco para filas alternas
+    },
+    margin: { top: 30 }, // Margen superior para evitar el título
+    styles: {
+      cellPadding: 4, // Espaciado dentro de las celdas
+      overflow: 'linebreak', // Ajuste de texto si es largo
+      valign: 'middle' // Alineación vertical al centro
+    },
+    theme: 'plain' // Usamos un tema plano sin bordes predefinidos
   });
+
+  // Guarda el PDF con un nombre específico
   doc.save('registro-reflexiones.pdf');
 };
 

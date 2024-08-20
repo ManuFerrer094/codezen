@@ -8,9 +8,12 @@
     <v-tab-item>
       <div class="timer-display">
         <p>{{ formattedTime }}</p>
+        <div class="progress-bar">
+          <div class="progress" :style="progressStyle"></div>
+        </div>
       </div>
       <v-btn v-if="!isRunning" @click="startTimer" class="start-btn">Start</v-btn>
-      <v-btn v-if="isRunning" @click="togglePause" class="pause-btn">
+      <v-btn v-if="isRunning" @click="togglePause" :class="{'paused': isPaused, 'resume': !isPaused}">
         {{ isPaused ? 'Resume' : 'Pause' }}
       </v-btn>
       <v-btn v-if="isRunning && !isPaused" @click="nextStep" class="next-btn">Next</v-btn>
@@ -50,28 +53,33 @@ export default {
       const seconds = (this.secondsLeft % 60).toString().padStart(2, '0');
       return `${minutes}:${seconds}`;
     },
+    progressStyle() {
+      const totalDuration = this.currentTab === 0 ? this.workDuration * 60 : this.breakDuration * 60;
+      const progressPercentage = ((totalDuration - this.secondsLeft) / totalDuration) * 100;
+      return { width: `${progressPercentage}%` };
+    }
   },
   watch: {
     currentTab(newTab) {
       if (newTab === 0) {
-        this.$emit('phaseChange', 'work'); // Emitir evento de cambio de fase a "Work"
+        this.$emit('phaseChange', 'work');
       } else {
-        this.$emit('phaseChange', 'break'); // Emitir evento de cambio de fase a "Break"
+        this.$emit('phaseChange', 'break');
       }
     },
   },
   methods: {
     startTimer() {
-      this.currentTab = 0; // Asegura que comience en la fase de trabajo
+      this.currentTab = 0;
       this.secondsLeft = this.workDuration * 60;
       this.runTimer();
-      this.$emit('phaseChange', 'work'); // Emitir evento de cambio de fase a "Work"
+      this.$emit('phaseChange', 'work');
     },
     startBreak() {
-      this.currentTab = 1; // Cambia a la fase de descanso
+      this.currentTab = 1;
       this.secondsLeft = this.breakDuration * 60;
       this.runTimer();
-      this.$emit('phaseChange', 'break'); // Emitir evento de cambio de fase a "Break"
+      this.$emit('phaseChange', 'break');
     },
     runTimer() {
       if (!this.isRunning) {
@@ -111,7 +119,7 @@ export default {
         this.currentTab === 0
           ? this.workDuration * 60
           : this.breakDuration * 60;
-      this.$emit('phaseChange', this.currentTab === 0 ? 'work' : 'break'); // Emitir evento al cambiar manualmente
+      this.$emit('phaseChange', this.currentTab === 0 ? 'work' : 'break');
     },
   },
   beforeUnmount() {
@@ -121,14 +129,28 @@ export default {
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
 .work-timer {
   background-image: linear-gradient(135deg, #ff7e5f, #feb47b);
   transition: background-image 0.5s ease;
+  min-height: 20vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Roboto', sans-serif;
 }
 
 .break-timer {
   background-image: linear-gradient(135deg, #43cea2, #185a9d);
   transition: background-image 0.5s ease;
+  min-height: 20vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Roboto', sans-serif;
 }
 
 .custom-tabs {
@@ -153,6 +175,7 @@ export default {
   padding: 10px 0;
   transition: background-color 0.3s ease, color 0.3s ease;
   border-radius: 30px;
+  font-family: 'Roboto', sans-serif;
 }
 
 .custom-tabs .v-tab:first-child {
@@ -175,9 +198,67 @@ export default {
   color: white;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.3);
   margin: 15px 0;
+  position: relative;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 5px;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  margin-top: 15px;
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
+  background-color: white;
+  transition: width 1s linear;
 }
 
 .start-btn, .pause-btn, .next-btn {
   margin: 10px;
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-weight: 500;
+  font-size: 18px;
+  text-transform: uppercase;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.start-btn {
+  background-color: #ffcc00;
+  color: white;
+}
+
+.pause-btn {
+  background-color: #ff6f61;
+  color: white;
+}
+
+.pause-btn.paused {
+  background-color: #ffcc00;
+}
+
+.next-btn {
+  background-color: #43cea2;
+  color: white;
+}
+
+.start-btn:hover, .pause-btn:hover, .next-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .timer-display {
+    font-size: 48px;
+  }
+
+  .start-btn, .pause-btn, .next-btn {
+    font-size: 16px;
+    padding: 8px 16px;
+  }
 }
 </style>

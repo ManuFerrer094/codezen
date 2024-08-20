@@ -84,7 +84,9 @@
     <transition name="fade">
       <div v-if="!exerciseCompleted && showControls" class="control-container">
         <!-- Barra de progreso visual -->
-        <div class="visual-timer" :style="{ width: visualTimerWidth + '%' }"></div>
+        <div class="visual-timer">
+          <div class="progress" :style="{ width: visualTimerWidth + '%' }"></div>
+        </div>
 
         <!-- Botones para pausar/reanudar y terminar -->
         <div class="action-buttons">
@@ -360,16 +362,26 @@ export default {
   flex-direction: row;
 }
 
-/* Barra de progreso visual */
+/* Contenedor de la barra de progreso visual */
 .visual-timer {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
   height: 5px;
-  background-color: #676767;
-  transition: width 1s linear;
+  background-color: #676767; /* Fondo de la barra que no se consume */
+  border-radius: 2px; /* Bordes redondeados */
+  overflow: hidden; /* Para que el progreso no salga del contenedor */
 }
+
+/* Barra de progreso superpuesta */
+.visual-timer .progress {
+  height: 100%;
+  background-color: white; /* Color de la barra de progreso */
+  width: 0%; /* Ancho inicial */
+  transition: width 1s linear; /* Transición suave */
+}
+
 
 /* Botones de acción */
 .action-buttons {
