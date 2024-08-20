@@ -421,15 +421,43 @@ export default {
   padding: 0 20px; /* Espaciado de los botones */
 }
 
+/* Estilos generales */
 .icon-button {
   width: 50px;
   height: 50px;
-  background-color: #fff; /* Fondo blanco */
-  border-radius: 50%; /* Asegurar que los botones sean redondos */
+  background-color: var(--v-btn-background, #fff); /* Fondo adaptable */
+  color: var(--v-btn-color, #000); /* Color del ícono adaptable */
+  border-radius: 50%; /* Botón redondo */
   display: flex;
   justify-content: center;
   align-items: center;
   box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .icon-button {
+    background-color: var(--v-btn-background-dark, #333); /* Fondo oscuro */
+    color: var(--v-btn-color-dark, #fff); /* Color del ícono en modo oscuro */
+  }
+}
+
+.icon-button:hover {
+  background-color: var(--v-btn-hover-background, #f0f0f0); /* Fondo en hover adaptable */
+  color: var(--v-btn-hover-color, #000); /* Color del ícono en hover adaptable */
+}
+
+@media (prefers-color-scheme: dark) {
+  .icon-button:hover {
+    background-color: var(--v-btn-hover-background-dark, #444); /* Fondo oscuro en hover */
+    color: var(--v-btn-hover-color-dark, #fff); /* Color del ícono en hover oscuro */
+  }
+}
+
+/* Manteniendo los íconos con tamaño consistente */
+.icon-button .icon {
+  font-size: 24px;
 }
 
 .icon-button .icon {

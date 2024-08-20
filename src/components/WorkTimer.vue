@@ -8,15 +8,30 @@
     <v-tab-item>
       <div class="timer-display">
         <p>{{ formattedTime }}</p>
-        <div class="progress-bar">
+        <div 
+          class="progress-bar"
+          @mousedown="startSeeking"
+          @mousemove="handleSeeking"
+          @mouseup="endSeeking"
+          @mouseleave="endSeeking"
+          :style="{ cursor: isDragging ? 'grabbing' : 'pointer' }"
+          ref="progressBar"
+        >
           <div class="progress" :style="progressStyle"></div>
         </div>
       </div>
-      <v-btn v-if="!isRunning" @click="startTimer" class="start-btn">Start</v-btn>
-      <v-btn v-if="isRunning" @click="togglePause" :class="{'paused': isPaused, 'resume': !isPaused}">
-        {{ isPaused ? 'Resume' : 'Pause' }}
+      <v-btn v-if="!isRunning" @click="startTimer" class="start-btn">
+        <v-icon>{{ isPaused ? 'mdi-pause' : 'mdi-play' }}</v-icon>
       </v-btn>
-      <v-btn v-if="isRunning && !isPaused" @click="nextStep" class="next-btn">Next</v-btn>
+      
+      <div v-if="isRunning" class="button-container">
+        <v-btn @click="togglePause" class="icon-button">
+          <v-icon>{{ isPaused ? 'mdi-play' : 'mdi-pause' }}</v-icon>
+        </v-btn>
+        <v-btn v-if="!isPaused" @click="nextStep" class="icon-button">
+          <v-icon>mdi-skip-next</v-icon>
+        </v-btn>
+      </div>
     </v-tab-item>
   </div>
 </template>
@@ -27,11 +42,11 @@ export default {
   props: {
     workDuration: {
       type: Number,
-      default: 25,
+      default: 50,
     },
     breakDuration: {
       type: Number,
-      default: 5,
+      default: 10,
     },
     isLastBlock: {
       type: Boolean,
@@ -40,11 +55,12 @@ export default {
   },
   data() {
     return {
-      currentTab: 0, // 0: Work, 1: Break
+      currentTab: 0,
       isRunning: false,
       isPaused: false,
       secondsLeft: this.workDuration * 60,
       interval: null,
+      isDragging: false,
     };
   },
   computed: {
@@ -58,15 +74,6 @@ export default {
       const progressPercentage = ((totalDuration - this.secondsLeft) / totalDuration) * 100;
       return { width: `${progressPercentage}%` };
     }
-  },
-  watch: {
-    currentTab(newTab) {
-      if (newTab === 0) {
-        this.$emit('phaseChange', 'work');
-      } else {
-        this.$emit('phaseChange', 'break');
-      }
-    },
   },
   methods: {
     startTimer() {
@@ -120,6 +127,33 @@ export default {
           ? this.workDuration * 60
           : this.breakDuration * 60;
       this.$emit('phaseChange', this.currentTab === 0 ? 'work' : 'break');
+    },
+    startSeeking(event) {
+      this.isDragging = true;
+      this.seek(event);
+    },
+    handleSeeking(event) {
+      if (this.isDragging) {
+        this.seek(event);
+      }
+    },
+    endSeeking() {
+      if (this.isDragging) {
+        this.isDragging = false;
+        if (!this.isRunning) {
+          this.runTimer();
+        }
+      }
+    },
+    seek(event) {
+      const progressBar = this.$refs.progressBar;
+      const totalWidth = progressBar.clientWidth;
+      const clickPosition = event.offsetX;
+
+      const totalDuration = this.currentTab === 0 ? this.workDuration * 60 : this.breakDuration * 60;
+      const newTime = Math.floor((clickPosition / totalWidth) * totalDuration);
+
+      this.secondsLeft = totalDuration - newTime;
     },
   },
   beforeUnmount() {
@@ -216,39 +250,44 @@ export default {
   transition: width 1s linear;
 }
 
-.start-btn, .pause-btn, .next-btn {
+.start-btn, .icon-button {
   margin: 10px;
-  padding: 10px 20px;
-  border-radius: 30px;
-  font-weight: 500;
-  font-size: 18px;
-  text-transform: uppercase;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  color: white;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .start-btn {
   background-color: #ffcc00;
-  color: white;
 }
 
-.pause-btn {
+.icon-button {
   background-color: #ff6f61;
-  color: white;
 }
 
-.pause-btn.paused {
-  background-color: #ffcc00;
-}
-
-.next-btn {
+.icon-button + .icon-button {
   background-color: #43cea2;
-  color: white;
 }
 
-.start-btn:hover, .pause-btn:hover, .next-btn:hover {
+.start-btn:hover, .icon-button:hover {
   background-color: rgba(255, 255, 255, 0.2);
-  color: white;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.progress-bar {
+  cursor: pointer;
 }
 
 @media (max-width: 768px) {
@@ -256,9 +295,15 @@ export default {
     font-size: 48px;
   }
 
-  .start-btn, .pause-btn, .next-btn {
+  .start-btn {
     font-size: 16px;
     padding: 8px 16px;
+  }
+
+  .icon-button {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
   }
 }
 </style>

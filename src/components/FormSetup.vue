@@ -64,7 +64,7 @@
         block
         large
       >
-        Generar Bloques de Trabajo
+        Empezar
       </v-btn>
     </v-card>
   </v-form>

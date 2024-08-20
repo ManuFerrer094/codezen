@@ -82,8 +82,8 @@ export default {
     const userData = JSON.parse(localStorage.getItem('userData'));
     if (userData && userData.workLapses) {
       const workLapses = userData.workLapses;
-      const workDuration = userData.workDuration || 1;
-      const breakDuration = userData.breakDuration || 5;
+      const workDuration = userData.workDuration || 50;
+      const breakDuration = userData.breakDuration || 10;
 
       const workBlocks = [];
 
