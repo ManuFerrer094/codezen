@@ -110,8 +110,9 @@
 </template>
 
 <script>
-import ReflectionForm from '@/components/ReflectionForm.vue';
-
+import meditationAudioSrc from '../../public/meditation.mp3';
+import gongAudioSrc from '../../public/gong.mp3';
+import ReflectionForm from './ReflectionForm.vue';
 export default {
   components: {
     ReflectionForm
@@ -138,6 +139,8 @@ export default {
       campanaBuffer: null,
       gongBuffer: null,
       showControls: true,
+      meditationAudio: null, // Nuevo: Audio de meditación
+      gongAudio: null, // Nuevo: Audio del gong
     };
   },
   computed: {
@@ -184,6 +187,7 @@ export default {
     },
     async startExercise() {
       this.exerciseStarted = true;
+      this.playMeditationAudio(); // Reproducir el audio de fondo
       this.$nextTick(() => {
         const exerciseElement = this.$refs.exerciseContainer;
         if (exerciseElement && exerciseElement.requestFullscreen) {
@@ -202,6 +206,9 @@ export default {
       this.intervalId = setInterval(() => {
         if (!this.isPaused) {
           this.secondsLeft--;
+          if (this.secondsLeft === 5) {
+            this.playGongAudio(); // Reproducir el gong cuando falten 5 segundos
+          }
           if (this.secondsLeft <= 0) {
             this.endExercise(true); // Pasamos true para indicar que terminó automáticamente
           }
@@ -213,6 +220,7 @@ export default {
       this.exerciseCompleted = true;
       this.exerciseStarted = false;
       this.secondsLeft = 0; // Resetea el contador de tiempo a 0
+      this.stopMeditationAudio(); // Detener el audio de meditación
       if (autoComplete || !this.exerciseStarted) {
         this.showReflectionForm();
       }
@@ -275,13 +283,35 @@ export default {
     endDay() {
       this.exerciseCompleted = false;
       this.$router.push({ name: 'Home' }); // Redirigir a la página de inicio o cualquier otra lógica
+    },
+    // Nuevo: Métodos para controlar el audio
+    playMeditationAudio() {
+      if (!this.meditationAudio) {
+        this.meditationAudio = new Audio(meditationAudioSrc); // Asegúrate de que el archivo esté en la carpeta assets
+        this.meditationAudio.loop = true; // Repetir el audio en bucle
+      }
+      this.meditationAudio.play();
+    },
+    stopMeditationAudio() {
+      if (this.meditationAudio) {
+        this.meditationAudio.pause();
+        this.meditationAudio.currentTime = 0; // Reiniciar el audio
+      }
+    },
+    playGongAudio() {
+      if (!this.gongAudio) {
+        this.gongAudio = new Audio(gongAudioSrc); // Asegúrate de que el archivo esté en la carpeta assets
+      }
+      this.gongAudio.play();
     }
   },
   beforeUnmount() {
     clearInterval(this.intervalId);
     window.removeEventListener('mousemove', this.setupAutoHideControls); // Eliminar el event listener
+    this.stopMeditationAudio(); // Detener el audio de meditación cuando el componente se desmonte
   }
 };
+
 </script>
 
 <style scoped>

@@ -3,29 +3,17 @@
     <div class="card reflections-card">
       <div class="card-header reflections-title">Mis Reflexiones</div>
       <div class="card-body">
-        <!-- Filtros -->
-        <div class="row filter-row mb-4">
+        <!-- Desplegable de Ordenación y Filtrado -->
+        <div class="row mb-4">
           <div class="col-md-4">
             <v-select
-              v-model="filters.sentiment"
-              :items="sentimentOptions"
-              label="Filtrar por Ánimo"
+              v-model="selectedOption"
+              :items="sortAndFilterOptions"
+              label="Ordenar por / Filtrar por Ánimo"
               dense
               outlined
               class="custom-input"
             ></v-select>
-          </div>
-          <div class="col-md-4">
-            <v-text-field
-              v-model="filters.text"
-              label="Buscar por Reflexión"
-              dense
-              outlined
-              class="custom-input"
-            ></v-text-field>
-          </div>
-          <div class="col-md-4">
-            <v-btn @click="clearFilters" color="primary">Limpiar Filtros</v-btn>
           </div>
         </div>
 
@@ -37,10 +25,10 @@
           <table class="table reflections-table table-hover">
             <thead>
               <tr>
-                <th @click="sortTable('date')">Fecha</th>
-                <th @click="sortTable('text')">Reflexión</th>
-                <th @click="sortTable('sentiment')">Ánimo</th>
-                <th @click="sortTable('hoursWorked')">Horas Trabajadas</th>
+                <th>Fecha</th>
+                <th>Reflexión</th>
+                <th>Ánimo</th>
+                <th>Horas Trabajadas</th>
               </tr>
             </thead>
             <tbody>
@@ -71,38 +59,46 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 const reflections = ref([]);
-const sentimentOptions = ref(['Happy', 'Neutral', 'Sad']);
-const filters = ref({
-  sentiment: '',
-  text: ''
-});
-const sortColumn = ref('');
-const sortOrder = ref('asc');
+const selectedOption = ref('Fecha más reciente'); // Opción seleccionada por defecto
+const sortAndFilterOptions = ref([
+  'Fecha más reciente',
+  'Fecha más antigua',
+  'Jornada más larga',
+  'Jornada más corta',
+  'Ánimo: Happy',
+  'Ánimo: Neutral',
+  'Ánimo: Sad'
+]);
+
 const currentPage = ref(1);
 const itemsPerPage = ref(10);
 
 const filteredReflections = computed(() => {
-  let filtered = reflections.value.filter(reflection => {
-    const matchesSentiment = filters.value.sentiment
-      ? reflection.sentiment === filters.value.sentiment
-      : true;
-    const matchesText = reflection.text
-      .toLowerCase()
-      .includes(filters.value.text.toLowerCase());
-    return matchesSentiment && matchesText;
-  });
+  let filtered = reflections.value;
 
-  if (sortColumn.value) {
-    filtered = filtered.sort((a, b) => {
-      const aValue = a[sortColumn.value];
-      const bValue = b[sortColumn.value];
-
-      if (sortOrder.value === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
-    });
+  // Aplicar la lógica de filtrado y ordenación según la opción seleccionada
+  switch (selectedOption.value) {
+    case 'Fecha más reciente':
+      filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+      break;
+    case 'Fecha más antigua':
+      filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+      break;
+    case 'Jornada más larga':
+      filtered.sort((a, b) => b.hoursWorked - a.hoursWorked);
+      break;
+    case 'Jornada más corta':
+      filtered.sort((a, b) => a.hoursWorked - b.hoursWorked);
+      break;
+    case 'Ánimo: Happy':
+      filtered = filtered.filter(reflection => reflection.sentiment === 'Happy');
+      break;
+    case 'Ánimo: Neutral':
+      filtered = filtered.filter(reflection => reflection.sentiment === 'Neutral');
+      break;
+    case 'Ánimo: Sad':
+      filtered = filtered.filter(reflection => reflection.sentiment === 'Sad');
+      break;
   }
 
   return filtered;
@@ -120,6 +116,8 @@ const totalPages = computed(() => {
 
 const loadReflections = () => {
   reflections.value = JSON.parse(localStorage.getItem('reflections')) || [];
+  // Ordenar inicialmente por fecha más reciente
+  reflections.value.sort((a, b) => new Date(b.date) - new Date(a.date));
 };
 
 const exportToPDF = () => {
@@ -130,10 +128,10 @@ const exportToPDF = () => {
   doc.setTextColor('#6a00ff');  // Título en color morado
   doc.text('Registro de Reflexiones', 20, 20);
 
-  // Exporta la tabla con un estilo personalizado
+  // Exporta la tabla con un estilo personalizado y respeta el orden actual de las reflexiones
   doc.autoTable({
     head: [['Fecha', 'Reflexión', 'Ánimo', 'Horas Trabajadas']],
-    body: reflections.value.map(reflection => [
+    body: filteredReflections.value.map(reflection => [
       reflection.date,
       reflection.text,
       reflection.sentiment,
@@ -167,20 +165,6 @@ const exportToPDF = () => {
 
   // Guarda el PDF con un nombre específico
   doc.save('registro-reflexiones.pdf');
-};
-
-const clearFilters = () => {
-  filters.value.sentiment = '';
-  filters.value.text = '';
-};
-
-const sortTable = column => {
-  if (sortColumn.value === column) {
-    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
-  } else {
-    sortColumn.value = column;
-    sortOrder.value = 'asc';
-  }
 };
 
 onMounted(() => {
@@ -220,6 +204,8 @@ onMounted(() => {
   color: white;
   text-align: left;
   padding: 12px;
+  cursor: default;
+  position: relative;
 }
 
 .reflections-table td {

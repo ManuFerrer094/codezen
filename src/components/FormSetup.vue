@@ -13,11 +13,23 @@
       ></v-select>
 
       <!-- Añadir Lapsos de Tiempo -->
-      <h3 class="subtitle mb-3">Añadir Lapsos de Tiempo</h3>
-      <div v-for="(lapso, index) in formData.workLapses" :key="index" class="lapso-container mb-4">
+      <div class="lapso-header mb-3">
+        <h3 class="subtitle">Añadir Lapsos de Tiempo</h3>
+        <v-btn
+          icon
+          size="small"
+          @click="addLapso"
+          :disabled="formData.workLapses.length >= 2"
+        >
+          <v-icon>mdi-plus-circle</v-icon>
+        </v-btn>
+      </div>
+
+      <!-- Campos de Lapsos de Tiempo -->
+      <div v-for="(lapso, index) in formData.workLapses" :key="index" class="lapso-container mb-3">
         <v-select
           v-model="lapso.startTime"
-          :items="timeOptions"
+          :items="getStartTimeOptions(index)"
           label="Hora de Inicio"
           outlined
           dense
@@ -26,29 +38,23 @@
         ></v-select>
         <v-select
           v-model="lapso.endTime"
-          :items="timeOptions"
+          :items="getEndTimeOptions(lapso.startTime)"
           label="Hora de Fin"
           outlined
           dense
           required
           class="ml-2 custom-select"
         ></v-select>
-        <v-btn color="error" @click="removeLapso(index)" icon class="ml-2 custom-delete-btn">
+        <v-btn
+          icon
+          size="small"
+          color="error"
+          @click="removeLapso(index)"
+          :disabled="formData.workLapses.length === 1"
+        >
           <v-icon>mdi-delete</v-icon>
         </v-btn>
       </div>
-
-      <!-- Botón para agregar lapso -->
-      <v-btn
-        color="primary"
-        @click="addLapso"
-        class="add-button mt-4"
-        block
-        outlined
-        large
-      >
-        Agregar Lapso
-      </v-btn>
 
       <!-- Botón para enviar formulario -->
       <v-btn
@@ -95,10 +101,29 @@ export default {
   },
   methods: {
     addLapso() {
-      this.formData.workLapses.push({ startTime: null, endTime: null });
+      if (this.formData.workLapses.length < 2) {
+        this.formData.workLapses.push({ startTime: null, endTime: null });
+      }
     },
     removeLapso(index) {
-      this.formData.workLapses.splice(index, 1);
+      if (this.formData.workLapses.length > 1) {
+        this.formData.workLapses.splice(index, 1);
+      }
+    },
+    getStartTimeOptions(index) {
+      // Si hay lapsos previos, limitar las opciones de hora de inicio para evitar solapamientos
+      if (index > 0) {
+        const lastEndTime = this.formData.workLapses[index - 1].endTime;
+        return this.timeOptions.slice(this.timeOptions.indexOf(lastEndTime) + 1);
+      }
+      return this.timeOptions;
+    },
+    getEndTimeOptions(startTime) {
+      // Limitar las opciones de hora de fin a partir de la hora de inicio seleccionada
+      if (startTime) {
+        return this.timeOptions.slice(this.timeOptions.indexOf(startTime) + 1);
+      }
+      return this.timeOptions;
     },
     submitForm() {
       const lapses = this.formData.workLapses.map(lapso => ({
@@ -117,7 +142,6 @@ export default {
 <style scoped>
 /* Estilo personalizado para una apariencia más profunda y moderna */
 
-/* Colores para el modo claro y oscuro */
 .custom-card {
   background-color: var(--v-surface-base);
   color: var(--v-text-base);
@@ -136,6 +160,12 @@ export default {
   margin-bottom: 16px;
 }
 
+.lapso-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .lapso-container {
   display: flex;
   align-items: center;
@@ -151,43 +181,14 @@ export default {
   background-color: var(--v-surface-variant);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
   border: 1px solid #ddd;
-  padding: 12px;
+  padding: 10px;
   border-radius: 8px;
-}
-
-.custom-select:hover .v-input__control {
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .custom-select .v-label {
   color: var(--v-text-secondary);
   font-weight: 600;
   font-size: 14px;
-}
-
-.custom-delete-btn {
-  padding: 0;
-  min-width: 36px;
-  min-height: 36px;
-  border-radius: 50%;
-  background-color: #ff6b6b;
-  transition: background-color 0.3s ease;
-}
-
-.custom-delete-btn:hover {
-  background-color: #ff4a4a;
-}
-
-.add-button {
-  color: var(--v-primary-base);
-  border-color: var(--v-primary-base);
-  border-radius: 12px;
-  transition: background-color 0.3s ease;
-}
-
-.add-button:hover {
-  background-color: var(--v-primary-base);
-  color: white;
 }
 
 .submit-button {
@@ -207,7 +208,15 @@ export default {
   text-transform: uppercase;
 }
 
-/* Transiciones suaves */
+button.v-btn.v-btn--elevated.v-btn--icon.v-theme--light.bg-error.v-btn--density-default.v-btn--size-small.v-btn--variant-elevated,
+button.v-btn.v-btn--disabled.v-btn--icon.v-theme--light.bg-error.v-btn--density-default.v-btn--size-small.v-btn--variant-elevated,
+button.v-btn.v-btn--elevated.v-btn--icon.v-theme--dark.bg-error.v-btn--density-default.v-btn--size-small.v-btn--variant-elevated,
+button.v-btn.v-btn--disabled.v-btn--icon.v-theme--dark.bg-error.v-btn--density-default.v-btn--size-small.v-btn--variant-elevated {
+  margin-left: 2vh;
+  position: relative;
+  bottom: 1vh;
+}
+
 .v-btn,
 .custom-select .v-input__control {
   transition: all 0.3s ease;

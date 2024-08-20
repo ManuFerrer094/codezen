@@ -2,15 +2,17 @@
   <v-app>
     <!-- Navbar Responsivo -->
     <v-app-bar app color="primary" dark>
-      <!-- Título -->
-      <v-toolbar-title>CodeZen</v-toolbar-title>
+      <!-- Título que redirige a la home -->
+      <v-toolbar-title>
+        <router-link to="/" class="nav-title-link">RemoteZen</router-link>
+      </v-toolbar-title>
 
       <!-- Enlaces de navegación en desktop -->
       <v-spacer></v-spacer>
       <v-toolbar-items class="d-none d-md-flex">
-        <v-btn text to="/" class="nav-link">Inicio</v-btn>
-        <v-btn text to="/my-reflections" class="nav-link">Mis Reflexiones</v-btn>
-        <v-btn text to="/end-of-day" class="nav-link">Final</v-btn>
+        <v-btn to="/" class="nav-link">Inicio</v-btn>
+        <v-btn to="/my-reflections" class="nav-link">Mis Reflexiones</v-btn>
+        <v-btn to="/end-of-day" class="nav-link">Final</v-btn>
       </v-toolbar-items>
 
       <!-- Switch Dark/Light Mode -->
@@ -69,6 +71,17 @@ export default {
 
 .nav-link:hover {
   color: #ffffffcc; /* Cambia a un blanco más claro al hacer hover */
+}
+
+.nav-title-link {
+  color: white;
+  text-decoration: none;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.nav-title-link:hover {
+  color: #ffffffcc; /* Efecto hover para el título */
 }
 
 .v-app-bar {
