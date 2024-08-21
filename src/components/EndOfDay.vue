@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import BreathingBall from '@/components/BreathingBall.vue';
+import BreathingBall from '@/components/breathingball/BreathingBall.vue';
 
 export default {
   components: {
