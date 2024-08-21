@@ -3,32 +3,55 @@
     <div class="card reflections-card">
       <div class="card-header reflections-title">Mis Reflexiones</div>
       <div class="card-body">
-        <!-- Desplegable de Ordenación y Filtrado -->
-        <div class="row mb-4">
-          <div class="col-md-4">
-            <v-select
-              v-model="selectedOption"
-              :items="sortAndFilterOptions"
-              label="Ordenar por / Filtrar por Ánimo"
-              dense
-              outlined
-              class="custom-input"
-            ></v-select>
-          </div>
-        </div>
-
-        <!-- Botón de exportar a PDF -->
         <v-btn @click="exportToPDF" color="primary" class="mb-4">Exportar a PDF</v-btn>
-
-        <!-- Tabla de reflexiones usando Bootstrap -->
         <div class="table-responsive">
           <table class="table reflections-table table-hover">
             <thead>
               <tr>
-                <th>Fecha</th>
-                <th>Reflexión</th>
-                <th>Ánimo</th>
-                <th>Horas Trabajadas</th>
+                <th @click="sortTable('date')">
+                  Fecha
+                  <span v-if="sortColumn === 'date'">
+                    <svg v-if="sortDirection === 'asc'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-short" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M8 12a.5.5 0 0 1-.5-.5V4.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 4.707V11.5A.5.5 0 0 1 8 12z"/>
+                    </svg>
+                    <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-down-short" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M8 4a.5.5 0 0 1 .5.5v6.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 .708-.708L7.5 11.293V4.5A.5.5 0 0 1 8 4z"/>
+                    </svg>
+                  </span>
+                </th>
+                <th @click="sortTable('text')">
+                  Reflexión
+                  <span v-if="sortColumn === 'text'">
+                    <svg v-if="sortDirection === 'asc'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-short" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M8 12a.5.5 0 0 1-.5-.5V4.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 4.707V11.5A.5.5 0 0 1 8 12z"/>
+                    </svg>
+                    <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-down-short" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M8 4a.5.5 0 0 1 .5.5v6.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 .708-.708L7.5 11.293V4.5A.5.5 0 0 1 8 4z"/>
+                    </svg>
+                  </span>
+                </th>
+                <th @click="sortTable('sentiment')">
+                  Ánimo
+                  <span v-if="sortColumn === 'sentiment'">
+                    <svg v-if="sortDirection === 'asc'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-short" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M8 12a.5.5 0 0 1-.5-.5V4.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 4.707V11.5A.5.5 0 0 1 8 12z"/>
+                    </svg>
+                    <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-down-short" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M8 4a.5.5 0 0 1 .5.5v6.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1-.708-.708L7.5 11.293V4.5A.5.5 0 0 1 8 4z"/>
+                    </svg>
+                  </span>
+                </th>
+                <th @click="sortTable('hoursWorked')">
+                  Horas Trabajadas
+                  <span v-if="sortColumn === 'hoursWorked'">
+                    <svg v-if="sortDirection === 'asc'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-short" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M8 12a.5.5 0 0 1-.5-.5V4.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 4.707V11.5A.5.5 0 0 1 8 12z"/>
+                    </svg>
+                    <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-down-short" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M8 4a.5.5 0 0 1 .5.5v6.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 .708-.708L7.5 11.293V4.5A.5.5 0 0 1 8 4z"/>
+                    </svg>
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -41,8 +64,6 @@
             </tbody>
           </table>
         </div>
-
-        <!-- Paginación -->
         <v-pagination
           v-model="currentPage"
           :length="totalPages"
@@ -59,111 +80,81 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 const reflections = ref([]);
-const selectedOption = ref('Fecha más reciente'); // Opción seleccionada por defecto
-const sortAndFilterOptions = ref([
-  'Fecha más reciente',
-  'Fecha más antigua',
-  'Jornada más larga',
-  'Jornada más corta',
-  'Ánimo: Happy',
-  'Ánimo: Neutral',
-  'Ánimo: Sad'
-]);
-
 const currentPage = ref(1);
 const itemsPerPage = ref(10);
+const sortColumn = ref(null);
+const sortDirection = ref('asc');
 
-const filteredReflections = computed(() => {
-  let filtered = reflections.value;
+const loadReflections = () => {
+  reflections.value = JSON.parse(localStorage.getItem('reflections')) || [];
+};
 
-  // Aplicar la lógica de filtrado y ordenación según la opción seleccionada
-  switch (selectedOption.value) {
-    case 'Fecha más reciente':
-      filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
-      break;
-    case 'Fecha más antigua':
-      filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
-      break;
-    case 'Jornada más larga':
-      filtered.sort((a, b) => b.hoursWorked - a.hoursWorked);
-      break;
-    case 'Jornada más corta':
-      filtered.sort((a, b) => a.hoursWorked - b.hoursWorked);
-      break;
-    case 'Ánimo: Happy':
-      filtered = filtered.filter(reflection => reflection.sentiment === 'Happy');
-      break;
-    case 'Ánimo: Neutral':
-      filtered = filtered.filter(reflection => reflection.sentiment === 'Neutral');
-      break;
-    case 'Ánimo: Sad':
-      filtered = filtered.filter(reflection => reflection.sentiment === 'Sad');
-      break;
+const sortTable = (column) => {
+  if (sortColumn.value === column) {
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortColumn.value = column;
+    sortDirection.value = 'asc';
   }
 
-  return filtered;
-});
+  reflections.value.sort((a, b) => {
+    let comparison = 0;
+    if (a[column] > b[column]) {
+      comparison = 1;
+    } else if (a[column] < b[column]) {
+      comparison = -1;
+    }
+    return sortDirection.value === 'asc' ? comparison : -comparison;
+  });
+};
 
 const paginatedReflections = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value;
   const end = start + itemsPerPage.value;
-  return filteredReflections.value.slice(start, end);
+  return reflections.value.slice(start, end);
 });
 
 const totalPages = computed(() => {
-  return Math.ceil(filteredReflections.value.length / itemsPerPage.value);
+  return Math.ceil(reflections.value.length / itemsPerPage.value);
 });
-
-const loadReflections = () => {
-  reflections.value = JSON.parse(localStorage.getItem('reflections')) || [];
-  // Ordenar inicialmente por fecha más reciente
-  reflections.value.sort((a, b) => new Date(b.date) - new Date(a.date));
-};
 
 const exportToPDF = () => {
   const doc = new jsPDF();
-
-  // Configura el título del PDF
   doc.setFontSize(18);
-  doc.setTextColor('#6a00ff');  // Título en color morado
+  doc.setTextColor('#6a00ff');
   doc.text('Registro de Reflexiones', 20, 20);
-
-  // Exporta la tabla con un estilo personalizado y respeta el orden actual de las reflexiones
   doc.autoTable({
     head: [['Fecha', 'Reflexión', 'Ánimo', 'Horas Trabajadas']],
-    body: filteredReflections.value.map(reflection => [
+    body: reflections.value.map(reflection => [
       reflection.date,
       reflection.text,
       reflection.sentiment,
       reflection.hoursWorked
     ]),
-    // Estilos personalizados para que se asemeje a la tabla HTML
     headStyles: {
-      fillColor: [106, 0, 255], // Color de fondo morado para el encabezado
-      textColor: [255, 255, 255], // Color del texto blanco
-      halign: 'left', // Alineación a la izquierda
+      fillColor: [106, 0, 255],
+      textColor: [255, 255, 255],
+      halign: 'left',
       fontSize: 12,
       padding: 10
     },
     bodyStyles: {
-      fillColor: [245, 245, 245], // Fondo gris claro para las celdas del cuerpo
-      textColor: [0, 0, 0], // Color del texto negro
+      fillColor: [245, 245, 245],
+      textColor: [0, 0, 0],
       fontSize: 10,
       padding: 10
     },
     alternateRowStyles: {
-      fillColor: [255, 255, 255] // Fondo blanco para filas alternas
+      fillColor: [255, 255, 255]
     },
-    margin: { top: 30 }, // Margen superior para evitar el título
+    margin: { top: 30 },
     styles: {
-      cellPadding: 4, // Espaciado dentro de las celdas
-      overflow: 'linebreak', // Ajuste de texto si es largo
-      valign: 'middle' // Alineación vertical al centro
+      cellPadding: 4,
+      overflow: 'linebreak',
+      valign: 'middle'
     },
-    theme: 'plain' // Usamos un tema plano sin bordes predefinidos
+    theme: 'plain'
   });
-
-  // Guarda el PDF con un nombre específico
   doc.save('registro-reflexiones.pdf');
 };
 
@@ -198,25 +189,22 @@ onMounted(() => {
   justify-content: center;
 }
 
-/* Estilos personalizados para la tabla usando Bootstrap */
 .reflections-table th {
-  background-color: #6a00ff; /* Siempre morado */
+  background-color: #6a00ff;
   color: white;
   text-align: left;
   padding: 12px;
-  cursor: default;
-  position: relative;
+  cursor: pointer;
 }
 
 .reflections-table td {
   padding: 12px;
   text-align: left;
-  background-color: var(--v-surface-base); /* Fondo dinámico basado en el tema */
-  color: var(--v-text-base); /* Color dinámico basado en el tema */
-  border: 1px solid var(--v-border-color); /* Bordes dinámicos */
+  background-color: var(--v-surface-base);
+  color: var(--v-text-base);
+  border: 1px solid var(--v-border-color);
 }
 
-/* Estilos personalizados para inputs */
 .custom-input .v-input__control {
   background-color: var(--v-surface-base);
   color: var(--v-text-base);
@@ -231,7 +219,6 @@ onMounted(() => {
   color: var(--v-text-base);
 }
 
-/* Bordes personalizados en modo claro y oscuro */
 :root {
   --v-border-color: black;
 }

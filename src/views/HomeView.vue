@@ -3,7 +3,7 @@
     <v-row justify="center" class="form-row">
       <v-col cols="12" sm="10" md="8" lg="6">
         <v-card class="pa-6 elevation-3 custom-card" rounded="lg">
-          <v-card-title class="text-h5 text-center">Planifica tu Jornada</v-card-title>
+          <v-card-title class="text-h5 text-center">Planifica tu jornada</v-card-title>
           <v-divider></v-divider>
           <v-card-text>
             <FormSetup @submit="goToWorkBlocks" />
@@ -37,15 +37,14 @@ export default {
 </script>
 
 <style scoped>
-/* Definimos el Pantone personalizado basado en blanco, morado y negro */
 :root {
-  --primary-color: #6A0DAD; /* Morado profundo */
-  --background-color: #FFFFFF; /* Fondo blanco */
-  --text-color: #1A1A1A; /* Negro para el texto */
-  --button-color: #6A0DAD; /* Morado para botones */
-  --button-hover-color: #4B0082; /* Un tono más oscuro de morado para hover */
-  --card-background-color: #F0F0F0; /* Fondo gris claro para tarjetas */
-  --divider-color: #E0E0E0; /* Color claro para el divisor */
+  --primary-color: #6A0DAD;
+  --background-color: #FFFFFF;
+  --text-color: #1A1A1A;
+  --button-color: #6A0DAD;
+  --button-hover-color: #4B0082;
+  --card-background-color: #F0F0F0;
+  --divider-color: #E0E0E0;
 }
 
 .home-page {
@@ -57,14 +56,12 @@ export default {
   align-items: center;
 }
 
-/* Estilo para las tarjetas */
 .custom-card {
   background-color: var(--card-background-color);
   border-radius: 24px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
-/* Tipografía moderna */
 .v-card-title {
   font-family: 'Palo Alto', sans-serif;
   font-weight: 700;
@@ -78,7 +75,6 @@ export default {
   font-size: 16px;
 }
 
-/* Botones minimalistas y modernos */
 .custom-button {
   background-color: var(--button-color);
   color: white;
@@ -96,7 +92,6 @@ export default {
   transform: translateY(-2px);
 }
 
-/* Ajustes responsive para mobile */
 @media (max-width: 600px) {
   .home-page {
     padding: 0;

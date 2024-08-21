@@ -1,6 +1,6 @@
 <template>
     <div>
-      <v-card-title class="headline">Guía de Respiración</v-card-title>
+      <v-card-title class="headline">Guía de respiración</v-card-title>
       <v-card-text>
         <p>Este ejercicio de respiración te ayudará a relajarte. Sigue las indicaciones en pantalla:</p>
         <ul>

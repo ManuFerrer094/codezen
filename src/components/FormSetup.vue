@@ -1,7 +1,6 @@
 <template>
   <v-form @submit.prevent="submitForm">
     <v-card class="custom-card pa-6">
-      <!-- Campo de Profesión -->
       <v-select
         v-model="formData.profession"
         :items="professions"
@@ -12,7 +11,6 @@
         class="mb-4 custom-select"
       ></v-select>
 
-      <!-- Añadir Lapsos de Tiempo -->
       <div class="lapso-header mb-3">
         <h3 class="subtitle">Añadir Lapsos de Tiempo</h3>
         <v-btn
@@ -25,7 +23,6 @@
         </v-btn>
       </div>
 
-      <!-- Campos de Lapsos de Tiempo -->
       <div v-for="(lapso, index) in formData.workLapses" :key="index" class="lapso-container mb-3">
         <v-select
           v-model="lapso.startTime"
@@ -56,7 +53,6 @@
         </v-btn>
       </div>
 
-      <!-- Botón para enviar formulario -->
       <v-btn
         color="success"
         type="submit"
@@ -76,9 +72,7 @@ export default {
     return {
       formData: {
         profession: '',
-        workLapses: [
-          { startTime: null, endTime: null }
-        ]
+        workLapses: [{ startTime: null, endTime: null }]
       },
       professions: [
         'Desarrollador Full Stack',
@@ -111,7 +105,6 @@ export default {
       }
     },
     getStartTimeOptions(index) {
-      // Si hay lapsos previos, limitar las opciones de hora de inicio para evitar solapamientos
       if (index > 0) {
         const lastEndTime = this.formData.workLapses[index - 1].endTime;
         return this.timeOptions.slice(this.timeOptions.indexOf(lastEndTime) + 1);
@@ -119,7 +112,6 @@ export default {
       return this.timeOptions;
     },
     getEndTimeOptions(startTime) {
-      // Limitar las opciones de hora de fin a partir de la hora de inicio seleccionada
       if (startTime) {
         return this.timeOptions.slice(this.timeOptions.indexOf(startTime) + 1);
       }
@@ -132,7 +124,6 @@ export default {
       }));
 
       localStorage.setItem('workLapses', JSON.stringify(lapses));
-
       this.$emit('submit', JSON.parse(JSON.stringify(this.formData)));
     }
   }
@@ -140,8 +131,6 @@ export default {
 </script>
 
 <style scoped>
-/* Estilo personalizado para una apariencia más profunda y moderna */
-
 .custom-card {
   background-color: var(--v-surface-base);
   color: var(--v-text-base);
@@ -156,7 +145,7 @@ export default {
   font-family: 'Poppins', sans-serif;
   font-weight: 500;
   font-size: 18px;
-  color: var(--v-text-base); /* Texto que se adapta al tema */
+  color: var(--v-text-base);
   margin-bottom: 16px;
 }
 

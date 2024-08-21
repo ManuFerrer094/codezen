@@ -18,7 +18,7 @@
     },
     methods: {
       acceptNotification() {
-        this.$emit('accept'); // Emitir el evento para cerrar el modal y ejecutar la acción
+        this.$emit('accept');
       }
     }
   };
@@ -31,8 +31,8 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(0, 0, 0, 0.5); /* Hacer el fondo opaco */
-    z-index: 9999; /* Asegurarse de que esté por encima de todo */
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
     display: flex;
     justify-content: center;
     align-items: center;

@@ -39,8 +39,6 @@
         </v-col>
       </v-row>
     </div>
-
-    <!-- Modal para notificaciones -->
     <NotificationModal 
       v-if="notificationVisible" 
       :title="notificationTitle" 
@@ -68,9 +66,9 @@ export default {
       notificationMessage: '',
       totalHoursWorked: 0,
       nextAction: null,
-      currentPhase: 'work', // Fase actual: trabajo o descanso
-      soundInterval: null, // Para controlar el bucle del sonido
-      audio: null // Instancia del audio
+      currentPhase: 'work',
+      soundInterval: null,
+      audio: null
     };
   },
   computed: {
@@ -113,32 +111,30 @@ export default {
   },
   methods: {
     handleWorkComplete() {
-    this.totalHoursWorked += 1;
-    // Cambia la notificación para que llame a startBreak como la acción
-    this.showNotification(
-      "¡Es hora de descansar!",
-      "Haz clic en el botón 'Aceptar' para iniciar tu descanso.",
-      this.startBreak
-    );
-  },
-  handleBreakComplete() {
-    this.completeBlock(this.activeBlockIndex);
-    if (this.activeBlockIndex < this.workBlocks.length - 1) {
+      this.totalHoursWorked += 1;
       this.showNotification(
-        `Bloque ${this.activeBlockIndex + 1} completado`,
-        "Prepárate para el siguiente bloque de trabajo.",
-        this.startNextBlock
+        "¡Es hora de descansar!",
+        "Haz clic en el botón 'Aceptar' para iniciar tu descanso.",
+        this.startBreak
       );
-    } else {
-      this.showNotification("Todos los bloques completados", "¡Buen trabajo!", this.goToEndOfDay);
-    }
-  },
-  startBreak() {
-    // Inicia el temporizador de descanso
-    if (this.$refs.workTimer && this.$refs.workTimer[0]) {
-      this.$refs.workTimer[0].startBreak();
-    }
-  },
+    },
+    handleBreakComplete() {
+      this.completeBlock(this.activeBlockIndex);
+      if (this.activeBlockIndex < this.workBlocks.length - 1) {
+        this.showNotification(
+          `Bloque ${this.activeBlockIndex + 1} completado`,
+          "Prepárate para el siguiente bloque de trabajo.",
+          this.startNextBlock
+        );
+      } else {
+        this.showNotification("Todos los bloques completados", "¡Buen trabajo!", this.goToEndOfDay);
+      }
+    },
+    startBreak() {
+      if (this.$refs.workTimer && this.$refs.workTimer[0]) {
+        this.$refs.workTimer[0].startBreak();
+      }
+    },
     completeBlock(index) {
       this.workBlocks[index].completed = true;
     },
@@ -155,13 +151,11 @@ export default {
       this.playNotificationSoundLoop();
 
       if (navigator.vibrate) {
-        navigator.vibrate([200, 100, 200]); // Vibración patrón
+        navigator.vibrate([200, 100, 200]);
       }
     },
     handleNotificationAccept() {
       this.notificationVisible = false;
-
-      // Detener el bucle de sonido cuando se acepte la notificación
       this.stopNotificationSoundLoop();
 
       if (this.nextAction) {
@@ -191,26 +185,18 @@ export default {
       this.currentPhase = phase;
     },
     playNotificationSoundLoop() {
-      // Crear una instancia de audio
       this.audio = new Audio('/notification.mp3');
-      
-      // Reproducir el sonido inmediatamente
       this.audio.play();
-
-      // Configurar el bucle del sonido cada 3 segundos (ajusta el tiempo según la duración del sonido)
       this.soundInterval = setInterval(() => {
-        this.audio.currentTime = 0; // Reinicia el sonido desde el principio
-        this.audio.play(); // Reproduce el sonido
-      }, 18000); // Tiempo de intervalo
+        this.audio.currentTime = 0;
+        this.audio.play();
+      }, 18000);
     },
     stopNotificationSoundLoop() {
-      // Detener el intervalo
       if (this.soundInterval) {
         clearInterval(this.soundInterval);
         this.soundInterval = null;
       }
-      
-      // Detener el sonido actual
       if (this.audio) {
         this.audio.pause();
         this.audio.currentTime = 0;
@@ -218,12 +204,9 @@ export default {
     }
   },
   beforeUnmount() {
-    // Limpiar el intervalo si se desmonta el componente
     this.stopNotificationSoundLoop();
   }
 };
-
-
 </script>
 
 <style scoped>

@@ -118,12 +118,12 @@ export default {
 }
 
 .sentiment-icon:hover {
-  transform: scale(1.2); /* Efecto de zoom al hacer hover */
+  transform: scale(1.2);
   border-radius: 10px;
 }
 
 .sentiment-icon.selected {
   border-radius: 10px;
-  transform: scale(1.5); /* Escalar un poco más cuando está seleccionado */
+  transform: scale(1.5);
 }
 </style>
