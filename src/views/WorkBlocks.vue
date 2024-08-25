@@ -19,7 +19,7 @@
                 ? 'block-active-break'
                 : ''
             ]"
-            class="work-block-card no-padding"
+            class="work-block-card no-padding step-work-block"
           >
             <v-card-title>{{ block.time }}</v-card-title>
             <v-card-text>
@@ -44,18 +44,24 @@
       :title="notificationTitle" 
       :message="notificationMessage" 
       @accept="handleNotificationAccept"
+      class="step-notification-modal"
     />
+
+    <!-- Componente del Tour -->
+    <InteractiveTour ref="tourComponent" :steps="tourSteps" />
   </v-container>
 </template>
 
 <script>
 import WorkTimer from '@/components/WorkTimer.vue';
 import NotificationModal from '@/components/NotificationModal.vue';
+import InteractiveTour from '@/components/InteractiveTour.vue'; // Importar el componente del tour
 
 export default {
   components: {
     WorkTimer,
-    NotificationModal
+    NotificationModal,
+    InteractiveTour,
   },
   data() {
     return {
@@ -68,7 +74,19 @@ export default {
       nextAction: null,
       currentPhase: 'work',
       soundInterval: null,
-      audio: null
+      audio: null,
+      tourSteps: [ // Definición de los pasos del tour
+        {
+          target: '.step-work-block',
+          title: 'Bloques de Trabajo',
+          content: 'Aquí están los bloques de trabajo. Cada uno representa una hora de trabajo.',
+        },
+        {
+          target: '.step-notification-modal',
+          title: 'Notificaciones',
+          content: 'Aquí recibirás notificaciones cuando completes un bloque de trabajo o un descanso.',
+        },
+      ],
     };
   },
   computed: {
@@ -108,6 +126,9 @@ export default {
         this.startFirstBlock
       );
     }
+
+    // Iniciar el tour al montar el componente
+    this.$refs.tourComponent.startTour();
   },
   methods: {
     handleWorkComplete() {

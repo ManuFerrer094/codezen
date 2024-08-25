@@ -8,10 +8,10 @@
         outlined
         required
         dense
-        class="mb-4 custom-select"
+        class="mb-4 custom-select step-profession"
       ></v-select>
 
-      <div class="lapso-header mb-3">
+      <div class="lapso-header mb-3 step-lapses">
         <h3 class="subtitle">Añadir Lapsos de Tiempo</h3>
         <v-btn
           icon
@@ -23,7 +23,7 @@
         </v-btn>
       </div>
 
-      <div v-for="(lapso, index) in formData.workLapses" :key="index" class="lapso-container mb-3">
+      <div v-for="(lapso, index) in formData.workLapses" :key="index" class="lapso-container mb-3 step-lapso">
         <v-select
           v-model="lapso.startTime"
           :items="getStartTimeOptions(index)"
@@ -62,12 +62,22 @@
       >
         Empezar
       </v-btn>
+
+      <v-btn @click="startTour" class="mt-3">Iniciar Tour</v-btn>
     </v-card>
+
+    <!-- Componente de Tour Interactivo -->
+    <InteractiveTour ref="tourComponent" :steps="tourSteps" />
   </v-form>
 </template>
 
 <script>
+import InteractiveTour from './InteractiveTour.vue';
+
 export default {
+  components: {
+    InteractiveTour,
+  },
   data() {
     return {
       formData: {
@@ -90,10 +100,34 @@ export default {
         '00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00',
         '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00',
         '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
-      ]
+      ],
+      tourSteps: [
+        {
+          target: '.step-profession',
+          title: 'Profesión',
+          content: 'Selecciona tu profesión aquí.',
+        },
+        {
+          target: '.step-lapses',
+          title: 'Lapsos de Tiempo',
+          content: 'Añade lapsos de tiempo para tu jornada laboral.',
+        },
+        {
+          target: '.step-lapso',
+          title: 'Empezar',
+          content: 'Cuando hayas configurado tu jornada laboral, clica el botón "Empezar".',
+        },
+      ],
     };
   },
   methods: {
+    submitForm() {
+      // Guardar los datos en localStorage para usarlos en la página de bloques de trabajo
+      localStorage.setItem('userData', JSON.stringify(this.formData));
+
+      // Redirigir a la página de bloques de trabajo
+      this.$router.push('/work-blocks');
+    },
     addLapso() {
       if (this.formData.workLapses.length < 2) {
         this.formData.workLapses.push({ startTime: null, endTime: null });
@@ -117,14 +151,8 @@ export default {
       }
       return this.timeOptions;
     },
-    submitForm() {
-      const lapses = this.formData.workLapses.map(lapso => ({
-        startTime: lapso.startTime,
-        endTime: lapso.endTime
-      }));
-
-      localStorage.setItem('workLapses', JSON.stringify(lapses));
-      this.$emit('submit', JSON.parse(JSON.stringify(this.formData)));
+    startTour() {
+      this.$refs.tourComponent.startTour(); // Iniciar el tour desde el componente
     }
   }
 };
